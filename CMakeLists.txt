@@ -20,6 +20,7 @@ include(${Slicer_USE_FILE})
 #-----------------------------------------------------------------------------
 # Extension modules
 add_subdirectory(Collaboration)
+add_subdirectory(Chat)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
