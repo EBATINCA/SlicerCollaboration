@@ -587,9 +587,6 @@
         </layout>
        </widget>
       </item>
-      <item>
-       <widget class="qSlicerCollaborationFooBarWidget" name="FooBar" native="true"/>
-      </item>
      </layout>
     </widget>
    </item>
