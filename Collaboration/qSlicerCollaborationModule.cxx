@@ -56,20 +56,20 @@ qSlicerCollaborationModule::~qSlicerCollaborationModule()
 //-----------------------------------------------------------------------------
 QString qSlicerCollaborationModule::helpText() const
 {
-  return "This is a loadable module that can be bundled in an extension";
+  return "The Slicer Collaboration Module allows real-time collaboration between two 3D Slicer instances";
 }
 
 //-----------------------------------------------------------------------------
 QString qSlicerCollaborationModule::acknowledgementText() const
 {
-  return "This work was partially funded by NIH grant NXNNXXNNNNNN-NNXN";
+  return "This work was funded by the project 2021/47 ICEX Spain";
 }
 
 //-----------------------------------------------------------------------------
 QStringList qSlicerCollaborationModule::contributors() const
 {
   QStringList moduleContributors;
-  moduleContributors << QString("John Doe (AnyWare Corp.)");
+  moduleContributors << QString("Monica Garcia-Sevilla (ULPGC), David Garcia-Mato (Ebatinca S.L.), Csaba Pinter (Ebatinca S.L.)");
   return moduleContributors;
 }
 
@@ -82,13 +82,13 @@ QIcon qSlicerCollaborationModule::icon() const
 //-----------------------------------------------------------------------------
 QStringList qSlicerCollaborationModule::categories() const
 {
-  return QStringList() << "Examples";
+  return QStringList() << "SlicerCollaboration";
 }
 
 //-----------------------------------------------------------------------------
 QStringList qSlicerCollaborationModule::dependencies() const
 {
-  return QStringList();
+	return QStringList() << "OpenIGTLinkIF";
 }
 
 //-----------------------------------------------------------------------------
