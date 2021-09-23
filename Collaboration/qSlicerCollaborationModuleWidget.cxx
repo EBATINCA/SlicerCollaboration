@@ -59,4 +59,13 @@ void qSlicerCollaborationModuleWidget::setup()
   Q_D(qSlicerCollaborationModuleWidget);
   d->setupUi(this);
   this->Superclass::setup();
+
+  // Icons
+  QIcon rightIcon =
+      QApplication::style()->standardIcon(QStyle::SP_ArrowRight);
+  d->SynchronizeToolButton->setIcon(rightIcon);
+
+  QIcon leftIcon =
+      QApplication::style()->standardIcon(QStyle::SP_ArrowLeft);
+  d->UnsynchronizedToolButton->setIcon(leftIcon);
 }
