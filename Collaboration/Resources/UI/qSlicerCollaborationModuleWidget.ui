@@ -96,7 +96,7 @@
      <property name="collapsed">
       <bool>false</bool>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
@@ -245,7 +245,13 @@
         </property>
         <layout class="QGridLayout" name="gridLayout">
          <item row="6" column="5">
-          <widget class="qMRMLNodeComboBox" name="localHeadMRMLNodeComboBox"/>
+          <widget class="qMRMLNodeComboBox" name="localHeadMRMLNodeComboBox">
+           <property name="nodeTypes">
+            <stringlist>
+             <string>vtkMRMLModelNode</string>
+            </stringlist>
+           </property>
+          </widget>
          </item>
          <item row="4" column="7">
           <spacer name="horizontalSpacer_4">
@@ -559,7 +565,13 @@
           </widget>
          </item>
          <item row="4" column="5">
-          <widget class="qMRMLNodeComboBox" name="remoteHandsMRMLNodeComboBox"/>
+          <widget class="qMRMLNodeComboBox" name="remoteHandsMRMLNodeComboBox">
+           <property name="nodeTypes">
+            <stringlist>
+             <string>vtkMRMLModelNode</string>
+            </stringlist>
+           </property>
+          </widget>
          </item>
          <item row="0" column="0">
           <widget class="QLabel" name="HandsLabel">
@@ -582,7 +594,13 @@
           </spacer>
          </item>
          <item row="7" column="5">
-          <widget class="qMRMLNodeComboBox" name="remoteHeadMRMLNodeComboBox"/>
+          <widget class="qMRMLNodeComboBox" name="remoteHeadMRMLNodeComboBox">
+           <property name="nodeTypes">
+            <stringlist>
+             <string>vtkMRMLModelNode</string>
+            </stringlist>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -610,6 +628,7 @@
    <class>qMRMLNodeComboBox</class>
    <extends>QWidget</extends>
    <header>qMRMLNodeComboBox.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>qMRMLTreeView</class>
@@ -633,13 +652,104 @@
    <extends>QPushButton</extends>
    <header>ctkColorPickerButton.h</header>
   </customwidget>
-  <customwidget>
-   <class>qSlicerCollaborationFooBarWidget</class>
-   <extends>QWidget</extends>
-   <header>qSlicerCollaborationFooBarWidget.h</header>
-   <container>1</container>
-  </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>qSlicerCollaborationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>localHandsMRMLNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>243</x>
+     <y>327</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>230</x>
+     <y>474</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerCollaborationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>remoteHandsMRMLNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>243</x>
+     <y>327</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>230</x>
+     <y>502</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerCollaborationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>localHeadMRMLNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>243</x>
+     <y>327</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>230</x>
+     <y>549</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerCollaborationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>remoteHeadMRMLNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>243</x>
+     <y>327</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>230</x>
+     <y>577</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerCollaborationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>AllNodesTreeView</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>243</x>
+     <y>327</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>98</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerCollaborationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>SynchronizedTreeView</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>243</x>
+     <y>327</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>387</x>
+     <y>238</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
