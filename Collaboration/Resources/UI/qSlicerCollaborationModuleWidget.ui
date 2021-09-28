@@ -11,9 +11,29 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Collaboration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Collaboration:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="qMRMLNodeComboBox" name="MRMLNodeComboBox">
+       <property name="nodeTypes">
+        <stringlist>
+         <string>vtkMRMLCollaborationNode</string>
+        </stringlist>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <property name="topMargin">
@@ -102,42 +122,24 @@
         <item>
          <widget class="QLabel" name="AllNodesLabel">
           <property name="text">
-           <string>All nodes:</string>
+           <string>Available nodes:</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="qMRMLTreeView" name="AllNodesTreeView">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>160</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="editTriggers">
-           <set>QAbstractItemView::NoEditTriggers</set>
-          </property>
-          <property name="selectionMode">
-           <enum>QAbstractItemView::ExtendedSelection</enum>
-          </property>
-          <property name="headerHidden">
-           <bool>true</bool>
-          </property>
+         <widget class="qMRMLSubjectHierarchyTreeView" name="AvailableNodesTreeView">
           <property name="nodeTypes">
            <stringlist>
-            <string>vtkMRMLTransformableNode</string>
             <string>vtkMRMLModelNode</string>
-            <string>vtkMRMLTextNode</string>
-            <string>vtkMRMLMarkupsFiducialNode</string>
            </stringlist>
           </property>
-          <property name="fitSizeToVisibleIndexes">
+          <property name="visibilityColumnVisible">
+           <bool>false</bool>
+          </property>
+          <property name="idColumnVisible">
+           <bool>false</bool>
+          </property>
+          <property name="transformColumnVisible">
            <bool>false</bool>
           </property>
          </widget>
@@ -178,29 +180,17 @@
          </widget>
         </item>
         <item>
-         <widget class="qMRMLTreeView" name="SynchronizedTreeView">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <widget class="qMRMLSubjectHierarchyTreeView" name="SynchronizedTreeView">
+          <property name="visibilityColumnVisible">
+           <bool>false</bool>
           </property>
-          <property name="minimumSize">
-           <size>
-            <width>160</width>
-            <height>0</height>
-           </size>
+          <property name="idColumnVisible">
+           <bool>false</bool>
           </property>
-          <property name="editTriggers">
-           <set>QAbstractItemView::NoEditTriggers</set>
+          <property name="colorColumnVisible">
+           <bool>false</bool>
           </property>
-          <property name="selectionMode">
-           <enum>QAbstractItemView::ExtendedSelection</enum>
-          </property>
-          <property name="headerHidden">
-           <bool>true</bool>
-          </property>
-          <property name="fitSizeToVisibleIndexes">
+          <property name="transformColumnVisible">
            <bool>false</bool>
           </property>
          </widget>
@@ -209,19 +199,6 @@
       </item>
      </layout>
     </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer_4">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>0</width>
-       <height>0</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <widget class="ctkCollapsibleButton" name="CTKCollapsibleButton">
@@ -631,15 +608,15 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>qMRMLTreeView</class>
-   <extends>QTreeView</extends>
-   <header>qMRMLTreeView.h</header>
-  </customwidget>
-  <customwidget>
    <class>qSlicerWidget</class>
    <extends>QWidget</extends>
    <header>qSlicerWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLSubjectHierarchyTreeView</class>
+   <extends>QTreeView</extends>
+   <header>qMRMLSubjectHierarchyTreeView.h</header>
   </customwidget>
   <customwidget>
    <class>ctkCollapsibleButton</class>
@@ -667,7 +644,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>230</x>
-     <y>474</y>
+     <y>488</y>
     </hint>
    </hints>
   </connection>
@@ -683,7 +660,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>230</x>
-     <y>502</y>
+     <y>516</y>
     </hint>
    </hints>
   </connection>
@@ -699,7 +676,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>230</x>
-     <y>549</y>
+     <y>563</y>
     </hint>
    </hints>
   </connection>
@@ -715,23 +692,23 @@
     </hint>
     <hint type="destinationlabel">
      <x>230</x>
-     <y>577</y>
+     <y>591</y>
     </hint>
    </hints>
   </connection>
   <connection>
    <sender>qSlicerCollaborationModuleWidget</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>AllNodesTreeView</receiver>
+   <receiver>AvailableNodesTreeView</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>243</x>
-     <y>327</y>
+     <x>118</x>
+     <y>7</y>
     </hint>
     <hint type="destinationlabel">
-     <x>98</x>
-     <y>238</y>
+     <x>108</x>
+     <y>188</y>
     </hint>
    </hints>
   </connection>
@@ -742,12 +719,28 @@
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>243</x>
-     <y>327</y>
+     <x>326</x>
+     <y>2</y>
     </hint>
     <hint type="destinationlabel">
-     <x>387</x>
-     <y>238</y>
+     <x>335</x>
+     <y>192</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerCollaborationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>MRMLNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>184</x>
+     <y>2</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>194</x>
+     <y>14</y>
     </hint>
    </hints>
   </connection>
