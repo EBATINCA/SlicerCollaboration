@@ -1,8 +1,6 @@
 /*==============================================================================
 
-  Program: 3D Slicer
-
-  Portions (c) Copyright Brigham and Women's Hospital (BWH) All Rights Reserved.
+  Copyright (c) EBATINCA, S.L.
 
   See COPYRIGHT.txt
   or http://www.slicer.org/copyright/copyright.txt for details.
@@ -16,7 +14,8 @@
   This file was originally developed by Csaba Pinter, EBATINCA, S.L., and
   development was supported by "ICEX Espana Exportacion e Inversiones" under
   the program "Inversiones de Empresas Extranjeras en Actividades de I+D
-  (Fondo Tecnologico)- Convocatoria 2021"
+  (Fondo Tecnologico)- Convocatoria 2021", cofunded by the European Regional
+  Development Fund (ERDF).
 
 ==============================================================================*/
 
