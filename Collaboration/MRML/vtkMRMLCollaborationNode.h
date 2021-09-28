@@ -20,22 +20,22 @@
 
 ==============================================================================*/
 
-#ifndef __vtkMRMLCollaborationConnectorNode_h
-#define __vtkMRMLCollaborationConnectorNode_h
+#ifndef __vtkMRMLCollaborationNode_h
+#define __vtkMRMLCollaborationNode_h
 
-// OpenIGTLink includes
-#include "vtkMRMLIGTLConnectorNode.h"
+// MRML includes
+#include "vtkMRMLNode.h"
 
 // Collaboration includes
 #include "vtkSlicerCollaborationModuleMRMLExport.h"
 
 /// \brief TODO
 /// TODO
-class VTK_SLICER_COLLABORATION_MODULE_MRML_EXPORT vtkMRMLCollaborationConnectorNode : public vtkMRMLIGTLConnectorNode
+class VTK_SLICER_COLLABORATION_MODULE_MRML_EXPORT vtkMRMLCollaborationNode : public vtkMRMLNode
 {
 public:
-  static vtkMRMLCollaborationConnectorNode *New();
-  vtkTypeMacro(vtkMRMLCollaborationConnectorNode, vtkMRMLIGTLConnectorNode);
+  static vtkMRMLCollaborationNode *New();
+  vtkTypeMacro(vtkMRMLCollaborationNode, vtkMRMLNode);
   /// Print out the node information to the output stream
   void PrintSelf(ostream& os, vtkIndent indent) override;
 
@@ -51,13 +51,13 @@ public:
 
   /// Copy node content (excludes basic data, such as name and node references).
   /// \sa vtkMRMLNode::CopyContent
-  vtkMRMLCopyContentMacro(vtkMRMLCollaborationConnectorNode);
+  vtkMRMLCopyContentMacro(vtkMRMLCollaborationNode);
 
 protected:
-  vtkMRMLCollaborationConnectorNode();
-  ~vtkMRMLCollaborationConnectorNode() override;
-  vtkMRMLCollaborationConnectorNode(const vtkMRMLCollaborationConnectorNode&);
-  void operator=(const vtkMRMLCollaborationConnectorNode&);
+  vtkMRMLCollaborationNode();
+  ~vtkMRMLCollaborationNode() override;
+  vtkMRMLCollaborationNode(const vtkMRMLCollaborationNode&);
+  void operator=(const vtkMRMLCollaborationNode&);
 };
 
 #endif

@@ -21,6 +21,7 @@ set(MODULE_INCLUDE_DIRECTORIES
   ${CMAKE_CURRENT_BINARY_DIR}/Logic
   ${CMAKE_CURRENT_SOURCE_DIR}/Widgets
   ${CMAKE_CURRENT_BINARY_DIR}/Widgets
+  ${qSlicerSubjectHierarchyModuleWidgets_INCLUDE_DIRS}
   ${SlicerOpenIGTLink_ModuleMRML_INCLUDE_DIRS}
   ${SlicerOpenIGTLink_ModuleLogic_INCLUDE_DIRS}
   )
@@ -45,6 +46,7 @@ set(MODULE_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleMRML
   vtkSlicer${MODULE_NAME}ModuleLogic
   qSlicer${MODULE_NAME}ModuleWidgets
+  qSlicerSubjectHierarchyModuleWidgets
   vtkSlicerOpenIGTLinkIFModuleMRML
   vtkSlicerOpenIGTLinkIFModuleLogic
   )

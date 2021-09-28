@@ -9,6 +9,7 @@ set(${KIT}_INCLUDE_DIRECTORIES
   )
 
 set(${KIT}_SRCS
+  vtkMRMLCollaborationNode.cxx
   vtkMRMLCollaborationConnectorNode.cxx
   )
 
