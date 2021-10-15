@@ -30,6 +30,12 @@
          <string>vtkMRMLCollaborationNode</string>
         </stringlist>
        </property>
+       <property name="editEnabled">
+        <bool>true</bool>
+       </property>
+       <property name="renameEnabled">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
     </layout>
@@ -78,7 +84,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="remoteComputerLineEdit"/>
+      <widget class="QLineEdit" name="hostNameLineEdit">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QLabel" name="PortLabel">
@@ -88,12 +98,15 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QLineEdit" name="portLineEdit"/>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="connectButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="text">
       <string>Connect</string>
      </property>
