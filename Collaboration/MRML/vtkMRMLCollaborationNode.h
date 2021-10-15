@@ -40,7 +40,7 @@ public:
 
   vtkMRMLNode* CreateNodeInstance() override;
   /// Get node XML tag name (like Volume, Model)
-  const char* GetNodeTagName() override {return "CollaborationConnector";}
+  const char* GetNodeTagName() override {return "CollaborationNode";}
 
   /// Read node attributes from XML file
   void ReadXMLAttributes(const char** atts) override;
@@ -51,6 +51,8 @@ public:
   /// Copy node content (excludes basic data, such as name and node references).
   /// \sa vtkMRMLNode::CopyContent
   vtkMRMLCopyContentMacro(vtkMRMLCollaborationNode);
+
+  char* connectorNodeName;
 
 protected:
   vtkMRMLCollaborationNode();

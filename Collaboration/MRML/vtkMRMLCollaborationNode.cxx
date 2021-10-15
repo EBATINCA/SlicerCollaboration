@@ -26,7 +26,8 @@
 // VTK includes
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
-
+#include <vtkSmartPointer.h>
+//#include <vtkCollection.h>
 // STD includes
 #include <sstream>
 
@@ -36,6 +37,7 @@ vtkMRMLNodeNewMacro(vtkMRMLCollaborationNode);
 //----------------------------------------------------------------------------
 vtkMRMLCollaborationNode::vtkMRMLCollaborationNode()
 {
+  this->connectorNodeName = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -79,6 +81,7 @@ void vtkMRMLCollaborationNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/*=t
 void vtkMRMLCollaborationNode::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os,indent);
+  os << indent << "connectorNodeName:   " << (this->connectorNodeName ? this->connectorNodeName : "nullptr") << "\n";
 
   // vtkMRMLPrintBeginMacro(os, indent);
   // vtkMRMLPrintEnumMacro(AngleMeasurementMode);
