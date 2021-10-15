@@ -29,9 +29,14 @@
 #include <vtkIntArray.h>
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
+#include <vtkSmartPointer.h>
 
 // STD includes
 #include <cassert>
+
+// Collaboration module includes
+#include "vtkMRMLCollaborationNode.h"
+#include "vtkMRMLCollaborationConnectorNode.h"
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkSlicerCollaborationLogic);
@@ -39,6 +44,7 @@ vtkStandardNewMacro(vtkSlicerCollaborationLogic);
 //----------------------------------------------------------------------------
 vtkSlicerCollaborationLogic::vtkSlicerCollaborationLogic()
 {
+  vtkSmartPointer<vtkMRMLCollaborationNode> collaborationNode;
 }
 
 //----------------------------------------------------------------------------
@@ -65,7 +71,21 @@ void vtkSlicerCollaborationLogic::SetMRMLSceneInternal(vtkMRMLScene * newScene)
 //-----------------------------------------------------------------------------
 void vtkSlicerCollaborationLogic::RegisterNodes()
 {
-  assert(this->GetMRMLScene() != 0);
+  //assert(this->GetMRMLScene() != 0);
+  vtkMRMLScene* scene = this->GetMRMLScene();
+  if (!scene)
+  {
+    vtkErrorMacro("RegisterNodes: Invalid MRML scene!");
+    return;
+  }
+  if (!scene->IsNodeClassRegistered("vtkMRMLCollaborationNode"))
+  {
+      scene->RegisterNodeClass(vtkSmartPointer<vtkMRMLCollaborationNode>::New());
+  }
+  if (!scene->IsNodeClassRegistered("vtkMRMLCollaborationConnectorNode"))
+  {
+      scene->RegisterNodeClass(vtkSmartPointer<vtkMRMLCollaborationConnectorNode>::New());
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -76,12 +96,55 @@ void vtkSlicerCollaborationLogic::UpdateFromMRMLScene()
 
 //---------------------------------------------------------------------------
 void vtkSlicerCollaborationLogic
-::OnMRMLSceneNodeAdded(vtkMRMLNode* vtkNotUsed(node))
+::OnMRMLSceneNodeAdded(vtkMRMLNode* node)
 {
+    if (!node || !this->GetMRMLScene())
+    {
+        vtkErrorMacro("OnMRMLSceneNodeAdded: Invalid MRML scene or input node!");
+        return;
+    }
+    if (node->IsA("vtkMRMLCollaborationNode"))
+    {
+        // Check if a ConnectorNode for the new CollaborationNode exists
+        vtkMRMLCollaborationNode* collaborationNode = vtkMRMLCollaborationNode::SafeDownCast(node);
+        char* collabConnectorNodeName = collaborationNode->connectorNodeName;
+
+        if (!collabConnectorNodeName) {
+            // Create a ConnectorNode
+            vtkMRMLCollaborationConnectorNode* connectorNode =
+                vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->CreateNodeByClass("vtkMRMLCollaborationConnectorNode"));
+            this->GetMRMLScene()->AddNode(connectorNode);
+            // Set the same name as the Collaboration Node + Connector
+            char* collaborationNodeName = node->GetName();
+            char connectorName[] = "Connector";
+            char* connectorNodeName = new char[std::strlen(collaborationNodeName) + std::strlen(connectorName) + 1];
+            std::strcpy(connectorNodeName, collaborationNodeName);
+            std::strcat(connectorNodeName, connectorName);
+            connectorNode->SetName(connectorNodeName);
+            collaborationNode->connectorNodeName = connectorNodeName;
+            connectorNode->SetType(0);
+        }
+        this->Modified();
+    }
 }
+
 
 //---------------------------------------------------------------------------
 void vtkSlicerCollaborationLogic
-::OnMRMLSceneNodeRemoved(vtkMRMLNode* vtkNotUsed(node))
+::OnMRMLSceneNodeRemoved(vtkMRMLNode* node)
 {
+  if (!node || !this->GetMRMLScene())
+  {
+    vtkErrorMacro("OnMRMLSceneNodeRemoved: Invalid MRML scene or input node!");
+    return;
+  }
+  if (node->IsA("vtkMRMLCollaborationNode"))
+  {
+    vtkMRMLCollaborationNode* collaborationNode = vtkMRMLCollaborationNode::SafeDownCast(node);
+    // Get the connector node associated to the collaboration node
+    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->GetFirstNodeByName(collaborationNode->connectorNodeName));
+    this->GetMRMLScene()->RemoveNode(connectorNode);
+    this->Modified();
+  }
 }
+
