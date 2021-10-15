@@ -43,6 +43,14 @@ public:
   virtual ~qSlicerCollaborationModuleWidget();
 
 public slots:
+  /// Update widget GUI from collaboration node
+  void updateWidgetFromMRML();
+
+protected slots:
+  void setCollaborationNode(vtkMRMLNode*);
+  void onConnectButtonClicked();
+  /// Internal function to update the CollaborationConnector node based on the property widget
+  void updateConnectorNode();
 
 
 protected:
