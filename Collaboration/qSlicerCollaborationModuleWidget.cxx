@@ -152,6 +152,7 @@ void qSlicerCollaborationModuleWidget::updateWidgetFromMRML()
             if (connectorType == 1) {
                 d->serverModeRadioButton->setChecked(true);
                 d->hostNameLineEdit->setEnabled(false);
+                d->hostNameLineEdit->setText("NA");
             }
             // Type Client
             else {
@@ -180,12 +181,28 @@ void qSlicerCollaborationModuleWidget::onConnectButtonClicked()
             if (d->connectButton->text() == "Connect") {
                 connectorNode->Start();
                 d->connectButton->setText("Disconnect");
-                connectorNode->Delete();
+                // disable all buttons
+                d->MRMLNodeComboBox->setEnabled(false);
+                d->serverModeRadioButton->setEnabled(false);
+                d->clientModeRadioButton->setEnabled(false);
+                d->hostNameLineEdit->setEnabled(false);
+                d->portLineEdit->setEnabled(false);
+
             }
             // Stop the connection
             else {
                 connectorNode->Stop();
                 d->connectButton->setText("Connect");
+                //// enable all buttons
+                d->MRMLNodeComboBox->setEnabled(true);
+                d->serverModeRadioButton->setEnabled(true);
+                d->clientModeRadioButton->setEnabled(true);
+                d->portLineEdit->setEnabled(true);
+                if (connectorNode->GetType() == 2) {
+                    d->hostNameLineEdit->setEnabled(true);
+                }
+                
+
             }
         }
     }
@@ -198,6 +215,18 @@ void qSlicerCollaborationModuleWidget::updateConnectorNode()
 
     // Get the selected collaboration node
     vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
+
+    if (d->serverModeRadioButton->isChecked()) {
+        d->hostNameLineEdit->setDisabled(true);
+        d->hostNameLineEdit->setText("NA");
+    }
+    else {
+        d->hostNameLineEdit->setEnabled(true);
+        if (d->hostNameLineEdit->text() == "NA") {
+            d->hostNameLineEdit->setText("");
+        }
+        
+    }
 
     if (collabNode) {
         // Get the connector node associated to the collaboration node
