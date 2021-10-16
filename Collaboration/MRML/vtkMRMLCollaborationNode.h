@@ -52,7 +52,7 @@ public:
   /// \sa vtkMRMLNode::CopyContent
   vtkMRMLCopyContentMacro(vtkMRMLCollaborationNode);
 
-  char* connectorNodeName;
+  const char* connectorNodeID;
 
 protected:
   vtkMRMLCollaborationNode();

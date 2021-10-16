@@ -103,7 +103,7 @@ void qSlicerCollaborationModuleWidget::setCollaborationNode(vtkMRMLNode* node)
 
     if (collabNode) {
         // Get the connector node associated to the collaboration node
-        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetFirstNodeByName(collabNode->connectorNodeName));
+        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->connectorNodeID));
 
         if (connectorNode) {
             // if the conenctor node is new, get the current parameter values
@@ -139,7 +139,7 @@ void qSlicerCollaborationModuleWidget::updateWidgetFromMRML()
 
     if (collabNode) {
         // Get the connector node associated to the collaboration node
-        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetFirstNodeByName(collabNode->connectorNodeName));
+        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->connectorNodeID));
 
         if (connectorNode && this->mrmlScene())
         {
@@ -174,7 +174,7 @@ void qSlicerCollaborationModuleWidget::onConnectButtonClicked()
 
     if (collabNode) {
         // Get the connector node associated to the collaboration node
-        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetFirstNodeByName(collabNode->connectorNodeName));
+        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->connectorNodeID));
 
         if (connectorNode) {
             // Start the connection
@@ -230,7 +230,7 @@ void qSlicerCollaborationModuleWidget::updateConnectorNode()
 
     if (collabNode) {
         // Get the connector node associated to the collaboration node
-        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetFirstNodeByName(collabNode->connectorNodeName));
+        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->connectorNodeID));
 
         connectorNode->DisableModifiedEventOn();
 

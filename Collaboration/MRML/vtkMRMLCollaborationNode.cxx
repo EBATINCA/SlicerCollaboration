@@ -37,7 +37,7 @@ vtkMRMLNodeNewMacro(vtkMRMLCollaborationNode);
 //----------------------------------------------------------------------------
 vtkMRMLCollaborationNode::vtkMRMLCollaborationNode()
 {
-  this->connectorNodeName = nullptr;
+  this->connectorNodeID = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -81,7 +81,7 @@ void vtkMRMLCollaborationNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/*=t
 void vtkMRMLCollaborationNode::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os,indent);
-  os << indent << "connectorNodeName:   " << (this->connectorNodeName ? this->connectorNodeName : "nullptr") << "\n";
+  os << indent << "connectorNodeID:   " << (this->connectorNodeID ? this->connectorNodeID : "nullptr") << "\n";
 
   // vtkMRMLPrintBeginMacro(os, indent);
   // vtkMRMLPrintEnumMacro(AngleMeasurementMode);
