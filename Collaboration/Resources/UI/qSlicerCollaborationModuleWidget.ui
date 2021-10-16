@@ -88,6 +88,9 @@
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="text">
+        <string>NA</string>
+       </property>
       </widget>
      </item>
      <item>
