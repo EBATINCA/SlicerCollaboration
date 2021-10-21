@@ -41,6 +41,7 @@ public:
   typedef qSlicerAbstractModuleWidget Superclass;
   qSlicerCollaborationModuleWidget(QWidget *parent=0);
   virtual ~qSlicerCollaborationModuleWidget();
+  const char* selected_collab_node;
 
 public slots:
   /// Update widget GUI from collaboration node

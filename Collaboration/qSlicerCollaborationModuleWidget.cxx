@@ -36,8 +36,6 @@
 #include "vtkCollection.h"
 #include "qMRMLSubjectHierarchyModel.h";
 
-const char* SELECTED_COLLAB_NODE = "None";
-
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class qSlicerCollaborationModuleWidgetPrivate: public Ui_qSlicerCollaborationModuleWidget
@@ -63,6 +61,7 @@ qSlicerCollaborationModuleWidget::qSlicerCollaborationModuleWidget(QWidget* _par
   : Superclass( _parent )
   , d_ptr( new qSlicerCollaborationModuleWidgetPrivate )
 {
+    this->selected_collab_node = "None";
 }
 
 //-----------------------------------------------------------------------------
@@ -100,8 +99,13 @@ void qSlicerCollaborationModuleWidget::setup()
   connect(d->UnsynchronizeToolButton, SIGNAL(clicked()),
       SLOT(unsynchronizeSelectedNodes()));
 
-  d->SynchronizedTreeView->addNodeAttributeFilter(SELECTED_COLLAB_NODE);
+  // add the nodes selected for synchronization
+  d->SynchronizedTreeView->addNodeAttributeFilter(selected_collab_node);
   d->SynchronizedTreeView->model()->invalidateFilter();
+  // exclude the nodes selected for synchronization
+  d->AvailableNodesTreeView->addNodeAttributeFilter(selected_collab_node, "true", false);
+  d->AvailableNodesTreeView->model()->invalidateFilter();
+  
 
 }
 
@@ -117,7 +121,8 @@ void qSlicerCollaborationModuleWidget::setCollaborationNode(vtkMRMLNode* node)
     // Each time the node is modified, the qt widgets are updated
     qvtkReconnect(collabNode, vtkCommand::ModifiedEvent, this, SLOT(updateWidgetFromMRML()));
     // remove the current attribute filter for the tree view
-    d->SynchronizedTreeView->removeNodeAttributeFilter(SELECTED_COLLAB_NODE, true);
+    d->SynchronizedTreeView->removeNodeAttributeFilter(selected_collab_node, true);
+    d->AvailableNodesTreeView->removeNodeAttributeFilter(selected_collab_node, false);
     if (collabNode) {
         // Get the connector node associated to the collaboration node
         vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->connectorNodeID));
@@ -139,17 +144,21 @@ void qSlicerCollaborationModuleWidget::setCollaborationNode(vtkMRMLNode* node)
             d->connectButton->setEnabled(true);
         }
         // update the filter attributed with the selected collaboration node
-        SELECTED_COLLAB_NODE = collabNode->GetID();
+        selected_collab_node = collabNode->GetID();
     }
     else {
         // Disable Connect button
         d->connectButton->setEnabled(false);
         // set the filter attributed to None
-        SELECTED_COLLAB_NODE = "None";
+        selected_collab_node = "None";
     }
-    // add an attribute filter to the tree view with the selected collaboration node
-    d->SynchronizedTreeView->addNodeAttributeFilter(SELECTED_COLLAB_NODE);
+    // add an attribute filter to the tree view for the selected collaboration node
+    d->SynchronizedTreeView->addNodeAttributeFilter(selected_collab_node);
     d->SynchronizedTreeView->model()->invalidateFilter();
+    // add an attribute filter to exclude the nodes selectede for synchronization
+    d->AvailableNodesTreeView->addNodeAttributeFilter(selected_collab_node, "true", false);
+    d->AvailableNodesTreeView->model()->invalidateFilter();
+
     this->updateWidgetFromMRML();
 }
 
@@ -286,9 +295,10 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
     else
     {
         // set attribute of the collaboration node to the selected node
-        currentNode->SetAttribute(SELECTED_COLLAB_NODE,"true");
+        currentNode->SetAttribute(selected_collab_node,"true");
         // update tree visiblity
         d->SynchronizedTreeView->model()->invalidateFilter();
+        d->AvailableNodesTreeView->model()->invalidateFilter();
     }
 }
 
@@ -306,8 +316,9 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
     else
     {
         // remove the attribute of the collaboration node from the selected node
-        currentNode->RemoveAttribute(SELECTED_COLLAB_NODE);
+        currentNode->RemoveAttribute(selected_collab_node);
         // update tree visibility
         d->SynchronizedTreeView->model()->invalidateFilter();
+        d->AvailableNodesTreeView->model()->invalidateFilter();
     }
 }
