@@ -287,18 +287,21 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
     Q_D(qSlicerCollaborationModuleWidget);
     // Get the selected collaboration node
     vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
-    // Get the selected node to synchronize
-    vtkMRMLNode* currentNode = d->AvailableNodesTreeView->currentNode();
-    if (!currentNode) {
-        qWarning() << Q_FUNC_INFO << ": No node selected";
-    }
-    else
-    {
-        // set attribute of the collaboration node to the selected node
-        currentNode->SetAttribute(selected_collab_node,"true");
-        // update tree visiblity
-        d->SynchronizedTreeView->model()->invalidateFilter();
-        d->AvailableNodesTreeView->model()->invalidateFilter();
+    //Get the selected nodes to synchronize
+    vtkMRMLSubjectHierarchyNode* shNode = d->AvailableNodesTreeView->subjectHierarchyNode();
+    QList<vtkIdType> currentItemIDs = d->AvailableNodesTreeView->currentItems();
+    int numberOfItems = currentItemIDs.size();
+    if (numberOfItems > 0) {
+        vtkMRMLNode* selectedNode = nullptr;
+        for (int nodeIndex = numberOfItems - 1; nodeIndex >= 0; nodeIndex--)
+        {
+            selectedNode = shNode->GetItemDataNode(currentItemIDs[nodeIndex]);
+            // set attribute of the collaboration node to the selected node
+            selectedNode->SetAttribute(selected_collab_node, "true");
+            // update tree visibility
+            d->SynchronizedTreeView->model()->invalidateFilter();
+            d->AvailableNodesTreeView->model()->invalidateFilter();
+        }
     }
 }
 
@@ -308,17 +311,20 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
     Q_D(qSlicerCollaborationModuleWidget);
     // Get the selected collaboration node
     vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
-    // Get the selected node to synchronize
-    vtkMRMLNode* currentNode = d->SynchronizedTreeView->currentNode();
-    if (!currentNode) {
-        qWarning() << Q_FUNC_INFO << ": No node selected";
-    }
-    else
-    {
-        // remove the attribute of the collaboration node from the selected node
-        currentNode->RemoveAttribute(selected_collab_node);
-        // update tree visibility
-        d->SynchronizedTreeView->model()->invalidateFilter();
-        d->AvailableNodesTreeView->model()->invalidateFilter();
+    //Get the selected nodes to unsynchronize
+    vtkMRMLSubjectHierarchyNode* shNode = d->SynchronizedTreeView->subjectHierarchyNode();
+    QList<vtkIdType> currentItemIDs = d->SynchronizedTreeView->currentItems();
+    int numberOfItems = currentItemIDs.size();
+    if (numberOfItems > 0) {
+        vtkMRMLNode* selectedNode = nullptr;
+        for (int nodeIndex = numberOfItems - 1; nodeIndex >= 0; nodeIndex--)
+        {
+            selectedNode = shNode->GetItemDataNode(currentItemIDs[nodeIndex]);
+            // remove the attribute of the collaboration node from the selected node
+            selectedNode->RemoveAttribute(selected_collab_node);
+            // update tree visibility
+            d->SynchronizedTreeView->model()->invalidateFilter();
+            d->AvailableNodesTreeView->model()->invalidateFilter();
+        }
     }
 }
