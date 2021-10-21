@@ -22,6 +22,7 @@
 // MRML includes
 #include "vtkMRMLCollaborationNode.h"
 #include "vtkMRMLScene.h"
+#include "vtkMRMLCollaborationConnectorNode.h"
 
 // VTK includes
 #include <vtkNew.h>
@@ -31,13 +32,15 @@
 // STD includes
 #include <sstream>
 
+const char* vtkMRMLCollaborationNode::CollaborationConnectorNodeReferenceRole = "CollaborationConnector";
+const char* vtkMRMLCollaborationNode::CollaborationConnectorNodeReferenceMRMLAttributeName = "CollaborationConnectorNodeRef";
+
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationNode);
 
 //----------------------------------------------------------------------------
 vtkMRMLCollaborationNode::vtkMRMLCollaborationNode()
 {
-  this->connectorNodeID = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -81,10 +84,39 @@ void vtkMRMLCollaborationNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/*=t
 void vtkMRMLCollaborationNode::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os,indent);
-  os << indent << "connectorNodeID:   " << (this->connectorNodeID ? this->connectorNodeID : "nullptr") << "\n";
 
   // vtkMRMLPrintBeginMacro(os, indent);
   // vtkMRMLPrintEnumMacro(AngleMeasurementMode);
   // vtkMRMLPrintVectorMacro(OrientationRotationAxis, double, 3);
   // vtkMRMLPrintEndMacro();
+}
+
+//---------------------------------------------------------------------------
+void vtkMRMLCollaborationNode::SetCollaborationConnectorNodeID(const char* CollaborationConnectorNodeID)
+{
+	this->SetNodeReferenceID(this->GetCollaborationConnectorNodeReferenceRole(), CollaborationConnectorNodeID);
+}
+
+//---------------------------------------------------------------------------
+const char* vtkMRMLCollaborationNode::GetCollaborationConnectorNodeID()
+{
+	return this->GetNodeReferenceID(this->GetCollaborationConnectorNodeReferenceRole());
+}
+
+//---------------------------------------------------------------------------
+vtkMRMLCollaborationConnectorNode *vtkMRMLCollaborationNode::GetCollaborationConnectorNode()
+{
+	return vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetNodeReference(this->GetCollaborationConnectorNodeReferenceRole()));
+}
+
+//---------------------------------------------------------------------------
+const char* vtkMRMLCollaborationNode::GetCollaborationConnectorNodeReferenceRole()
+{
+	return vtkMRMLCollaborationNode::CollaborationConnectorNodeReferenceRole;
+}
+
+//----------------------------------------------------------------------------
+const char* vtkMRMLCollaborationNode::GetCollaborationConnectorNodeReferenceMRMLAttributeName()
+{
+	return vtkMRMLCollaborationNode::CollaborationConnectorNodeReferenceMRMLAttributeName;
 }

@@ -24,7 +24,8 @@
 
 // MRML includes
 #include "vtkMRMLNode.h"
-
+//#include "vtkMRMLCollaborationConnectorNode.h"
+class vtkMRMLCollaborationConnectorNode;
 // Collaboration includes
 #include "vtkSlicerCollaborationModuleMRMLExport.h"
 
@@ -52,13 +53,21 @@ public:
   /// \sa vtkMRMLNode::CopyContent
   vtkMRMLCopyContentMacro(vtkMRMLCollaborationNode);
 
-  const char* connectorNodeID;
-
+  void SetCollaborationConnectorNodeID(const char* CollaborationConnectorNodeID);
+  const char* GetCollaborationConnectorNodeID();
+  vtkMRMLCollaborationConnectorNode* GetCollaborationConnectorNode();
+  const char* GetCollaborationConnectorNodeReferenceRole(); // virtual
+  // const char* GetCollaborationConnectorNodeReferenceMRMLAttributeName();
 protected:
   vtkMRMLCollaborationNode();
   ~vtkMRMLCollaborationNode() override;
   vtkMRMLCollaborationNode(const vtkMRMLCollaborationNode&);
   void operator=(const vtkMRMLCollaborationNode&);
+
+  virtual const char* GetCollaborationConnectorNodeReferenceMRMLAttributeName();
+
+  static const char* CollaborationConnectorNodeReferenceRole;
+  static const char* CollaborationConnectorNodeReferenceMRMLAttributeName;
 };
 
 #endif

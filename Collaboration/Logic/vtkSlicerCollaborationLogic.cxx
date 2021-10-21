@@ -107,7 +107,7 @@ void vtkSlicerCollaborationLogic
     {
         // Check if a ConnectorNode for the new CollaborationNode exists
         vtkMRMLCollaborationNode* collaborationNode = vtkMRMLCollaborationNode::SafeDownCast(node);
-        const char* collabconnectorNodeID = collaborationNode->connectorNodeID;
+        const char* collabconnectorNodeID = collaborationNode->GetCollaborationConnectorNodeID();
 
         if (!collabconnectorNodeID) {
             // Create a ConnectorNode
@@ -122,7 +122,8 @@ void vtkSlicerCollaborationLogic
             std::strcat(connectorNodeName, connectorName);
             connectorNode->SetName(connectorNodeName);
             const char* connectorNodeID = connectorNode->GetID();
-            collaborationNode->connectorNodeID = connectorNodeID;
+            //collaborationNode->connectorNodeID = connectorNodeID;
+            collaborationNode->SetCollaborationConnectorNodeID(connectorNodeID);
             connectorNode->SetType(0);
         }
         this->Modified();
@@ -143,8 +144,9 @@ void vtkSlicerCollaborationLogic
   {
     vtkMRMLCollaborationNode* collaborationNode = vtkMRMLCollaborationNode::SafeDownCast(node);
     // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(collaborationNode->connectorNodeID));
+    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(collaborationNode->GetCollaborationConnectorNodeID()));
     this->GetMRMLScene()->RemoveNode(connectorNode);
+    collaborationNode->SetCollaborationConnectorNodeID(nullptr);
     this->Modified();
   }
 }
