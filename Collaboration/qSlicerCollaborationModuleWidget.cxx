@@ -34,6 +34,7 @@
 #include "vtkMRMLSubjectHierarchyNode.h"
 #include "qMRMLSortFilterSubjectHierarchyProxyModel.h"
 #include "vtkCollection.h"
+#include "qMRMLSubjectHierarchyModel.h";
 
 static const char* SYNC = "sync";
 
@@ -283,10 +284,8 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
     else
     {
         currentNode->SetAttribute(SYNC,"true");
-        // remove and add the filter so that the node is displayed in the tree view
-        d->SynchronizedTreeView->removeNodeAttributeFilter(SYNC, true);
-        d->SynchronizedTreeView->addNodeAttributeFilter(SYNC, true);
-        //std::cout << d->SynchronizedTreeView->displayedItemCount() << "\n";     
+        // update tree visiblity
+        d->SynchronizedTreeView->model()->invalidateFilter();
     }
 }
 
@@ -304,7 +303,7 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
     else
     {
         currentNode->RemoveAttribute(SYNC);
-        d->SynchronizedTreeView->removeNodeAttributeFilter(SYNC, true);
-        d->SynchronizedTreeView->addNodeAttributeFilter(SYNC, true);
+        // update tree visibility
+        d->SynchronizedTreeView->model()->invalidateFilter();
     }
 }
