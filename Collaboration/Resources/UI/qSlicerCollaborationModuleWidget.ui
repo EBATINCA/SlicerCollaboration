@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>487</width>
-    <height>656</height>
+    <width>491</width>
+    <height>663</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -147,6 +147,8 @@
           <property name="nodeTypes">
            <stringlist>
             <string>vtkMRMLModelNode</string>
+            <string>vtkMRMLMarkupsFiducialNode</string>
+            <string>vtkMRMLLinearTransformNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
@@ -175,7 +177,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="UnsynchronizedToolButton">
+         <widget class="QToolButton" name="UnsynchronizeToolButton">
           <property name="toolTip">
            <string>Remove the selected nodes from synchronization</string>
           </property>
@@ -197,6 +199,13 @@
         </item>
         <item>
          <widget class="qMRMLSubjectHierarchyTreeView" name="SynchronizedTreeView">
+          <property name="nodeTypes">
+           <stringlist>
+            <string>vtkMRMLModelNode</string>
+            <string>vtkMRMLLinearTransformNode</string>
+            <string>vtkMRMLMarkupsFiducialNode</string>
+           </stringlist>
+          </property>
           <property name="visibilityColumnVisible">
            <bool>false</bool>
           </property>
@@ -731,6 +740,22 @@
   <connection>
    <sender>qSlicerCollaborationModuleWidget</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>MRMLNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>184</x>
+     <y>2</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>194</x>
+     <y>14</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerCollaborationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>SynchronizedTreeView</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
    <hints>
@@ -745,18 +770,66 @@
    </hints>
   </connection>
   <connection>
-   <sender>qSlicerCollaborationModuleWidget</sender>
-   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
-   <receiver>MRMLNodeComboBox</receiver>
-   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <sender>MRMLNodeComboBox</sender>
+   <signal>currentNodeChanged(bool)</signal>
+   <receiver>SynchronizedTreeView</receiver>
+   <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>184</x>
-     <y>2</y>
+     <x>279</x>
+     <y>19</y>
     </hint>
     <hint type="destinationlabel">
-     <x>194</x>
-     <y>14</y>
+     <x>364</x>
+     <y>266</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MRMLNodeComboBox</sender>
+   <signal>currentNodeChanged(bool)</signal>
+   <receiver>AvailableNodesTreeView</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>279</x>
+     <y>19</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>121</x>
+     <y>266</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MRMLNodeComboBox</sender>
+   <signal>currentNodeChanged(bool)</signal>
+   <receiver>SynchronizeToolButton</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>279</x>
+     <y>19</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>243</x>
+     <y>216</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MRMLNodeComboBox</sender>
+   <signal>currentNodeChanged(bool)</signal>
+   <receiver>UnsynchronizeToolButton</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>279</x>
+     <y>19</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>243</x>
+     <y>296</y>
     </hint>
    </hints>
   </connection>

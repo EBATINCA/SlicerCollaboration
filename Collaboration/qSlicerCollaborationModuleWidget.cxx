@@ -29,7 +29,13 @@
 // Colaboration module includes
 #include "vtkMRMLCollaborationNode.h"
 #include "vtkMRMLCollaborationConnectorNode.h"
-//#include "vtkSlicerCollaborationLogic.h"
+
+// MRML includes
+#include "vtkMRMLSubjectHierarchyNode.h"
+#include "qMRMLSortFilterSubjectHierarchyProxyModel.h"
+#include "vtkCollection.h"
+
+static const char* SYNC = "sync";
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
@@ -77,7 +83,7 @@ void qSlicerCollaborationModuleWidget::setup()
 
   QIcon leftIcon =
       QApplication::style()->standardIcon(QStyle::SP_ArrowLeft);
-  d->UnsynchronizedToolButton->setIcon(leftIcon);
+  d->UnsynchronizeToolButton->setIcon(leftIcon);
 
   connect(d->MRMLNodeComboBox, SIGNAL(currentNodeChanged(vtkMRMLNode*)), this, SLOT(setCollaborationNode(vtkMRMLNode*)));
   connect(d->connectButton, SIGNAL(clicked()), this, SLOT(onConnectButtonClicked()));
@@ -86,6 +92,20 @@ void qSlicerCollaborationModuleWidget::setup()
   connect(d->clientModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNode()));
   connect(d->portLineEdit, SIGNAL(editingFinished()), this, SLOT(updateConnectorNode()));
   connect(d->hostNameLineEdit, SIGNAL(editingFinished()), this, SLOT(updateConnectorNode()));
+  // Synchronize nodes
+    // Transform nodes connection
+  connect(d->SynchronizeToolButton, SIGNAL(clicked()),
+      SLOT(synchronizeSelectedNodes()));
+  connect(d->UnsynchronizeToolButton, SIGNAL(clicked()),
+      SLOT(unsynchronizeSelectedNodes()));
+
+  d->SynchronizedTreeView->addNodeAttributeFilter(SYNC);
+
+  // OPTION 2
+  //QStringList filter;
+  //filter << SYNC;
+  //d->SynchronizedTreeView->sortFilterProxyModel()->setIncludeNodeAttributeNamesFilter(filter);
+  //d->SynchronizedTreeView->show();
 
 }
 
@@ -247,5 +267,44 @@ void qSlicerCollaborationModuleWidget::updateConnectorNode()
         connectorNode->SetServerPort(d->portLineEdit->text().toInt());
         connectorNode->DisableModifiedEventOff();
         connectorNode->InvokePendingModifiedEvent();
+    }
+}
+
+void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
+{
+    Q_D(qSlicerCollaborationModuleWidget);
+    // Get the selected collaboration node
+    vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
+    // Get the selected node to synchronize
+    vtkMRMLNode* currentNode = d->AvailableNodesTreeView->currentNode();
+    if (!currentNode) {
+        qWarning() << Q_FUNC_INFO << ": No node selected";
+    }
+    else
+    {
+        currentNode->SetAttribute(SYNC,"true");
+        // remove and add the filter so that the node is displayed in the tree view
+        d->SynchronizedTreeView->removeNodeAttributeFilter(SYNC, true);
+        d->SynchronizedTreeView->addNodeAttributeFilter(SYNC, true);
+        //std::cout << d->SynchronizedTreeView->displayedItemCount() << "\n";     
+    }
+}
+
+
+void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
+{
+    Q_D(qSlicerCollaborationModuleWidget);
+    // Get the selected collaboration node
+    vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
+    // Get the selected node to synchronize
+    vtkMRMLNode* currentNode = d->SynchronizedTreeView->currentNode();
+    if (!currentNode) {
+        qWarning() << Q_FUNC_INFO << ": No node selected";
+    }
+    else
+    {
+        currentNode->RemoveAttribute(SYNC);
+        d->SynchronizedTreeView->removeNodeAttributeFilter(SYNC, true);
+        d->SynchronizedTreeView->addNodeAttributeFilter(SYNC, true);
     }
 }

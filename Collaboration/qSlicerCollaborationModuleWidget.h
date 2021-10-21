@@ -52,6 +52,8 @@ protected slots:
   /// Internal function to update the CollaborationConnector node based on the property widget
   void updateConnectorNode();
 
+  void synchronizeSelectedNodes();
+  void unsynchronizeSelectedNodes();
 
 protected:
   QScopedPointer<qSlicerCollaborationModuleWidgetPrivate> d_ptr;
