@@ -24,6 +24,9 @@
 
 // MRML includes
 #include "vtkMRMLNode.h"
+#include <vtkStringArray.h>
+#include <vtkCollection.h>
+
 //#include "vtkMRMLCollaborationConnectorNode.h"
 class vtkMRMLCollaborationConnectorNode;
 // Collaboration includes
@@ -58,6 +61,13 @@ public:
   vtkMRMLCollaborationConnectorNode* GetCollaborationConnectorNode();
   const char* GetCollaborationConnectorNodeReferenceRole(); // virtual
   // const char* GetCollaborationConnectorNodeReferenceMRMLAttributeName();
+
+  void AddCollaborationSynchronizedNodeID(const char* CollaborationSynchronizedNodeID);
+  vtkStringArray* GetCollaborationSynchronizedNodeIDs();
+  vtkCollection* GetCollaborationSynchronizedNodes();
+  const char* GetCollaborationSynchronizedNodeReferenceRole(); // virtual
+  void RemoveCollaborationSynchronizedNodeID(const char* CollaborationSynchronizedNodeID);
+
 protected:
   vtkMRMLCollaborationNode();
   ~vtkMRMLCollaborationNode() override;
@@ -65,9 +75,12 @@ protected:
   void operator=(const vtkMRMLCollaborationNode&);
 
   virtual const char* GetCollaborationConnectorNodeReferenceMRMLAttributeName();
+  virtual const char* GetCollaborationSynchronizedNodeReferenceMRMLAttributeName();
 
   static const char* CollaborationConnectorNodeReferenceRole;
   static const char* CollaborationConnectorNodeReferenceMRMLAttributeName;
+  static const char* CollaborationSynchronizedNodesReferenceRole;
+  static const char* CollaborationSynchronizedNodesReferenceMRMLAttributeName;
 };
 
 #endif

@@ -299,6 +299,8 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
             selectedNode = shNode->GetItemDataNode(currentItemIDs[nodeIndex]);
             // set attribute of the collaboration node to the selected node
             selectedNode->SetAttribute(selected_collab_node, "true");
+            // add node reference to the collaboration node
+            collabNode->AddCollaborationSynchronizedNodeID(selectedNode->GetID());
             // update tree visibility
             d->SynchronizedTreeView->model()->invalidateFilter();
             d->AvailableNodesTreeView->model()->invalidateFilter();
@@ -323,6 +325,8 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
             selectedNode = shNode->GetItemDataNode(currentItemIDs[nodeIndex]);
             // remove the attribute of the collaboration node from the selected node
             selectedNode->RemoveAttribute(selected_collab_node);
+            // remove node reference from the collaboration node
+            collabNode->RemoveCollaborationSynchronizedNodeID(selectedNode->GetID());
             // update tree visibility
             d->SynchronizedTreeView->model()->invalidateFilter();
             d->AvailableNodesTreeView->model()->invalidateFilter();

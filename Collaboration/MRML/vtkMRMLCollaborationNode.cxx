@@ -28,12 +28,16 @@
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 #include <vtkSmartPointer.h>
-//#include <vtkCollection.h>
+#include <vtkCollection.h>
+#include <vtkStringArray.h>
+
 // STD includes
 #include <sstream>
 
 const char* vtkMRMLCollaborationNode::CollaborationConnectorNodeReferenceRole = "CollaborationConnector";
 const char* vtkMRMLCollaborationNode::CollaborationConnectorNodeReferenceMRMLAttributeName = "CollaborationConnectorNodeRef";
+const char* vtkMRMLCollaborationNode::CollaborationSynchronizedNodesReferenceRole = "SynchronizedNodes";
+const char* vtkMRMLCollaborationNode::CollaborationSynchronizedNodesReferenceMRMLAttributeName = "SynchronizedNodesNodeRef";
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationNode);
@@ -120,3 +124,65 @@ const char* vtkMRMLCollaborationNode::GetCollaborationConnectorNodeReferenceMRML
 {
 	return vtkMRMLCollaborationNode::CollaborationConnectorNodeReferenceMRMLAttributeName;
 }
+
+//---------------------------------------------------------------------------
+void vtkMRMLCollaborationNode::AddCollaborationSynchronizedNodeID(const char* CollaborationSynchronizedNodeID)
+{
+	this->AddNodeReferenceID(this->GetCollaborationSynchronizedNodeReferenceRole(), CollaborationSynchronizedNodeID);
+}
+
+//---------------------------------------------------------------------------
+vtkStringArray* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodeIDs()
+{
+	vtkStringArray* nodeIDs;
+	int numberOfNodeReferences = this->GetNumberOfNodeReferences(this->GetCollaborationSynchronizedNodeReferenceRole());
+	for (int n = 0; n < numberOfNodeReferences; ++n)
+	{
+		nodeIDs->InsertNextValue(this->GetNthNodeReferenceID(this->GetCollaborationSynchronizedNodeReferenceRole(), n));
+	}
+	return nodeIDs;
+}
+
+//---------------------------------------------------------------------------
+vtkCollection* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodes()
+{
+	//return vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetNodeReference(this->GetCollaborationSynchronizedNodeReferenceRole()));
+	vtkCollection* nodes;
+	int numberOfNodeReferences = this->GetNumberOfNodeReferences(this->GetCollaborationSynchronizedNodeReferenceRole());
+	for (int n = 0; n < numberOfNodeReferences; ++n)
+	{
+		nodes->AddItem(this->GetNthNodeReference(this->GetCollaborationSynchronizedNodeReferenceRole(), n));
+	}
+	return nodes;
+}
+
+//---------------------------------------------------------------------------
+const char* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodeReferenceRole()
+{
+	return vtkMRMLCollaborationNode::CollaborationSynchronizedNodesReferenceRole;
+}
+
+//----------------------------------------------------------------------------
+const char* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodeReferenceMRMLAttributeName()
+{
+	return vtkMRMLCollaborationNode::CollaborationSynchronizedNodesReferenceMRMLAttributeName;
+}
+
+void vtkMRMLCollaborationNode::RemoveCollaborationSynchronizedNodeID(const char* CollaborationSynchronizedNodeID)
+{
+	int numberOfNodeReferences = this->GetNumberOfNodeReferences(this->GetCollaborationSynchronizedNodeReferenceRole());
+	int removeNodeIndex = -1;
+	for (int n = 0; n < numberOfNodeReferences; ++n)
+	{
+		const char* currentNodeID = (this->GetNthNodeReferenceID(this->GetCollaborationSynchronizedNodeReferenceRole(), n));
+		if (std::string(currentNodeID) == std::string(CollaborationSynchronizedNodeID))
+		{
+			removeNodeIndex = n;
+		}
+	}
+	if (removeNodeIndex != -1)
+	{
+		this->RemoveNthNodeReferenceID(this->GetCollaborationSynchronizedNodeReferenceRole(), removeNodeIndex);
+	}
+}
+
