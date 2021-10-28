@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>491</width>
-    <height>663</height>
+    <width>487</width>
+    <height>656</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -58,7 +58,7 @@
         <string>Server</string>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -66,6 +66,9 @@
       <widget class="QRadioButton" name="clientModeRadioButton">
        <property name="text">
         <string>Client</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -86,10 +89,10 @@
      <item>
       <widget class="QLineEdit" name="hostNameLineEdit">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
-        <string>NA</string>
+        <string>localhost</string>
        </property>
       </widget>
      </item>
@@ -101,7 +104,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="portLineEdit"/>
+      <widget class="QLineEdit" name="portLineEdit">
+       <property name="text">
+        <string>18944</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -830,6 +837,70 @@
     <hint type="destinationlabel">
      <x>243</x>
      <y>296</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MRMLNodeComboBox</sender>
+   <signal>currentNodeChanged(bool)</signal>
+   <receiver>hostNameLineEdit</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>21</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>174</x>
+     <y>83</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MRMLNodeComboBox</sender>
+   <signal>currentNodeChanged(bool)</signal>
+   <receiver>portLineEdit</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>21</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>390</x>
+     <y>83</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MRMLNodeComboBox</sender>
+   <signal>currentNodeChanged(bool)</signal>
+   <receiver>clientModeRadioButton</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>21</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>401</x>
+     <y>52</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>MRMLNodeComboBox</sender>
+   <signal>currentNodeChanged(bool)</signal>
+   <receiver>serverModeRadioButton</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>289</x>
+     <y>21</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>243</x>
+     <y>52</y>
     </hint>
    </hints>
   </connection>

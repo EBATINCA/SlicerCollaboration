@@ -133,13 +133,7 @@ void qSlicerCollaborationModuleWidget::setCollaborationNode(vtkMRMLNode* node)
             if (connectorNode->GetType() == 0) {
                 std::string hostName;
                 std::string portNumber;
-                bool serverMode = d->serverModeRadioButton->isChecked();
-                if (serverMode) {
-                    connectorNode->SetTypeServer((d->portLineEdit->text()).toInt());
-                }
-                else {
-                    connectorNode->SetTypeClient((d->hostNameLineEdit->text()).toStdString(), (d->portLineEdit->text()).toInt());
-                }
+                connectorNode->SetTypeClient("localhost", 18944);
             }
             // Enable Connect button
             d->connectButton->setEnabled(true);
@@ -184,8 +178,8 @@ void qSlicerCollaborationModuleWidget::updateWidgetFromMRML()
             // Type Server
             if (connectorType == 1) {
                 d->serverModeRadioButton->setChecked(true);
-                d->hostNameLineEdit->setEnabled(false);
                 d->hostNameLineEdit->setText("NA");
+                d->hostNameLineEdit->setDisabled(true);
             }
             // Type Client
             else {
@@ -194,8 +188,7 @@ void qSlicerCollaborationModuleWidget::updateWidgetFromMRML()
                 d->hostNameLineEdit->setEnabled(true);
             }
         }
-    }
-    
+    }   
 }
 
 void qSlicerCollaborationModuleWidget::onConnectButtonClicked()
@@ -249,37 +242,31 @@ void qSlicerCollaborationModuleWidget::updateConnectorNode()
     // Get the selected collaboration node
     vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
 
-    if (d->serverModeRadioButton->isChecked()) {
-        d->hostNameLineEdit->setDisabled(true);
-        d->hostNameLineEdit->setText("NA");
-    }
-    else {
-        d->hostNameLineEdit->setEnabled(true);
-        if (d->hostNameLineEdit->text() == "NA") {
-            d->hostNameLineEdit->setText("");
-        }
-        
-    }
-
     if (collabNode) {
         // Get the connector node associated to the collaboration node
         vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
 
-        connectorNode->DisableModifiedEventOn();
+        if (connectorNode) {
+            connectorNode->DisableModifiedEventOn();
 
-        // Update connector properties
-        if (d->serverModeRadioButton->isChecked()) {
-            connectorNode->SetType(1);
-            d->hostNameLineEdit->setDisabled(true);
+            // Update connector properties
+            if (d->serverModeRadioButton->isChecked()) {
+                connectorNode->SetType(1);
+                d->hostNameLineEdit->setText("NA");
+                d->hostNameLineEdit->setDisabled(true);
+                d->portLineEdit->setEnabled(true);
+            }
+            else {
+                connectorNode->SetType(2);
+                d->hostNameLineEdit->setText("localhost");
+                d->hostNameLineEdit->setEnabled(true);
+                d->portLineEdit->setEnabled(true);
+                connectorNode->SetServerHostname(d->hostNameLineEdit->text().toStdString());
+            }
+            connectorNode->SetServerPort(d->portLineEdit->text().toInt());
+            connectorNode->DisableModifiedEventOff();
+            connectorNode->InvokePendingModifiedEvent();
         }
-        else {
-            connectorNode->SetType(2);
-            d->hostNameLineEdit->setEnabled(true);
-        }
-        connectorNode->SetServerHostname(d->hostNameLineEdit->text().toStdString());
-        connectorNode->SetServerPort(d->portLineEdit->text().toInt());
-        connectorNode->DisableModifiedEventOff();
-        connectorNode->InvokePendingModifiedEvent();
     }
 }
 
@@ -288,22 +275,28 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
     Q_D(qSlicerCollaborationModuleWidget);
     // Get the selected collaboration node
     vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
-    //Get the selected nodes to synchronize
-    vtkMRMLSubjectHierarchyNode* shNode = d->AvailableNodesTreeView->subjectHierarchyNode();
-    QList<vtkIdType> currentItemIDs = d->AvailableNodesTreeView->currentItems();
-    int numberOfItems = currentItemIDs.size();
-    if (numberOfItems > 0) {
-        vtkMRMLNode* selectedNode = nullptr;
-        for (int nodeIndex = numberOfItems - 1; nodeIndex >= 0; nodeIndex--)
-        {
-            selectedNode = shNode->GetItemDataNode(currentItemIDs[nodeIndex]);
-            // set attribute of the collaboration node to the selected node
-            selectedNode->SetAttribute(selected_collab_node, "true");
-            // add node reference to the collaboration node
-            collabNode->AddCollaborationSynchronizedNodeID(selectedNode->GetID());
-            // update tree visibility
-            d->SynchronizedTreeView->model()->invalidateFilter();
-            d->AvailableNodesTreeView->model()->invalidateFilter();
+    if (collabNode) {
+        // Get the connector node associated to the collaboration node
+        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+        if (connectorNode){
+            //Get the selected nodes to synchronize
+            vtkMRMLSubjectHierarchyNode* shNode = d->AvailableNodesTreeView->subjectHierarchyNode();
+            QList<vtkIdType> currentItemIDs = d->AvailableNodesTreeView->currentItems();
+            int numberOfItems = currentItemIDs.size();
+            if (numberOfItems > 0) {
+                vtkMRMLNode* selectedNode = nullptr;
+                for (int nodeIndex = numberOfItems - 1; nodeIndex >= 0; nodeIndex--)
+                {
+                    selectedNode = shNode->GetItemDataNode(currentItemIDs[nodeIndex]);
+                    // set attribute of the collaboration node to the selected node
+                    selectedNode->SetAttribute(selected_collab_node, "true");
+                    // add node reference to the collaboration node
+                    collabNode->AddCollaborationSynchronizedNodeID(selectedNode->GetID());
+                    // update tree visibility
+                    d->SynchronizedTreeView->model()->invalidateFilter();
+                    d->AvailableNodesTreeView->model()->invalidateFilter();
+                }
+            }
         }
     }
 }
@@ -314,22 +307,28 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
     Q_D(qSlicerCollaborationModuleWidget);
     // Get the selected collaboration node
     vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
-    //Get the selected nodes to unsynchronize
-    vtkMRMLSubjectHierarchyNode* shNode = d->SynchronizedTreeView->subjectHierarchyNode();
-    QList<vtkIdType> currentItemIDs = d->SynchronizedTreeView->currentItems();
-    int numberOfItems = currentItemIDs.size();
-    if (numberOfItems > 0) {
-        vtkMRMLNode* selectedNode = nullptr;
-        for (int nodeIndex = numberOfItems - 1; nodeIndex >= 0; nodeIndex--)
-        {
-            selectedNode = shNode->GetItemDataNode(currentItemIDs[nodeIndex]);
-            // remove the attribute of the collaboration node from the selected node
-            selectedNode->RemoveAttribute(selected_collab_node);
-            // remove node reference from the collaboration node
-            collabNode->RemoveCollaborationSynchronizedNodeID(selectedNode->GetID());
-            // update tree visibility
-            d->SynchronizedTreeView->model()->invalidateFilter();
-            d->AvailableNodesTreeView->model()->invalidateFilter();
+    if (collabNode) {
+        // Get the connector node associated to the collaboration node
+        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+        if (connectorNode) {
+            //Get the selected nodes to unsynchronize
+            vtkMRMLSubjectHierarchyNode* shNode = d->SynchronizedTreeView->subjectHierarchyNode();
+            QList<vtkIdType> currentItemIDs = d->SynchronizedTreeView->currentItems();
+            int numberOfItems = currentItemIDs.size();
+            if (numberOfItems > 0) {
+                vtkMRMLNode* selectedNode = nullptr;
+                for (int nodeIndex = numberOfItems - 1; nodeIndex >= 0; nodeIndex--)
+                {
+                    selectedNode = shNode->GetItemDataNode(currentItemIDs[nodeIndex]);
+                    // remove the attribute of the collaboration node from the selected node
+                    selectedNode->RemoveAttribute(selected_collab_node);
+                    // remove node reference from the collaboration node
+                    collabNode->RemoveCollaborationSynchronizedNodeID(selectedNode->GetID());
+                    // update tree visibility
+                    d->SynchronizedTreeView->model()->invalidateFilter();
+                    d->AvailableNodesTreeView->model()->invalidateFilter();
+                }
+            }
         }
     }
 }
