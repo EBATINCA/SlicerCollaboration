@@ -213,7 +213,17 @@ void qSlicerCollaborationModuleWidget::onConnectButtonClicked()
                 d->clientModeRadioButton->setEnabled(false);
                 d->hostNameLineEdit->setEnabled(false);
                 d->portLineEdit->setEnabled(false);
-
+                // send synchronized nodes
+                vtkCollection* syncNodes = collabNode->GetCollaborationSynchronizedNodes();
+                vtkStringArray* syncIDs = collabNode->GetCollaborationSynchronizedNodeIDs();
+                int numNodes = syncNodes->GetNumberOfItems();
+                for (int nodeIndex = numNodes - 1; nodeIndex >= 0; nodeIndex--)
+                {
+                    vtkMRMLNode* syncNode = vtkMRMLNode::SafeDownCast(syncNodes->GetItemAsObject(nodeIndex));
+                    connectorNode->PushNode(syncNode);
+                    vtkStdString ID = syncIDs->GetValue(nodeIndex);
+                    std::cout << this->mrmlScene()->GetNodeByID(ID)->GetName() << "\n";
+                }
             }
             // Stop the connection
             else {
@@ -297,6 +307,7 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                     d->AvailableNodesTreeView->model()->invalidateFilter();
                     // add as output node of the connector node
                     connectorNode->RegisterOutgoingMRMLNode(selectedNode);
+                    connectorNode->PushNode(selectedNode);
                 }
             }
         }
