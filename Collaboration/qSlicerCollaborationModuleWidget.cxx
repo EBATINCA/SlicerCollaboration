@@ -295,6 +295,8 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                     // update tree visibility
                     d->SynchronizedTreeView->model()->invalidateFilter();
                     d->AvailableNodesTreeView->model()->invalidateFilter();
+                    // add as output node of the connector node
+                    connectorNode->RegisterOutgoingMRMLNode(selectedNode);
                 }
             }
         }
@@ -327,6 +329,8 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                     // update tree visibility
                     d->SynchronizedTreeView->model()->invalidateFilter();
                     d->AvailableNodesTreeView->model()->invalidateFilter();
+                    // remove as output node of the connector node
+                    connectorNode->UnregisterOutgoingMRMLNode(selectedNode);
                 }
             }
         }
