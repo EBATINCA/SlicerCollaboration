@@ -134,7 +134,7 @@ void vtkMRMLCollaborationNode::AddCollaborationSynchronizedNodeID(const char* Co
 //---------------------------------------------------------------------------
 vtkStringArray* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodeIDs()
 {
-	vtkStringArray* nodeIDs;
+	vtkStringArray* nodeIDs = vtkStringArray::New();
 	int numberOfNodeReferences = this->GetNumberOfNodeReferences(this->GetCollaborationSynchronizedNodeReferenceRole());
 	for (int n = 0; n < numberOfNodeReferences; ++n)
 	{
@@ -147,7 +147,7 @@ vtkStringArray* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodeIDs()
 vtkCollection* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodes()
 {
 	//return vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetNodeReference(this->GetCollaborationSynchronizedNodeReferenceRole()));
-	vtkCollection* nodes;
+	vtkCollection* nodes = vtkCollection::New();
 	int numberOfNodeReferences = this->GetNumberOfNodeReferences(this->GetCollaborationSynchronizedNodeReferenceRole());
 	for (int n = 0; n < numberOfNodeReferences; ++n)
 	{
