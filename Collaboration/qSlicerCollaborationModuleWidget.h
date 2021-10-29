@@ -55,6 +55,7 @@ protected slots:
 
   void synchronizeSelectedNodes();
   void unsynchronizeSelectedNodes();
+  void sendNodesForSynchronization();
 
 protected:
   QScopedPointer<qSlicerCollaborationModuleWidgetPrivate> d_ptr;

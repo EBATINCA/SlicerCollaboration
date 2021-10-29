@@ -98,6 +98,8 @@ void qSlicerCollaborationModuleWidget::setup()
       SLOT(synchronizeSelectedNodes()));
   connect(d->UnsynchronizeToolButton, SIGNAL(clicked()),
       SLOT(unsynchronizeSelectedNodes()));
+  // Send nodes selected for synchronization
+  connect(d->sendButton, SIGNAL(clicked()), this, SLOT(sendNodesForSynchronization()));
 
   // add the nodes selected for synchronization
   d->SynchronizedTreeView->addNodeAttributeFilter(selected_collab_node);
@@ -205,31 +207,26 @@ void qSlicerCollaborationModuleWidget::onConnectButtonClicked()
         if (connectorNode) {
             // Start the connection
             if (d->connectButton->text() == "Connect") {
+                // send synchronized nodes on connect
+                connectorNode->PushOnConnect();
                 connectorNode->Start();
                 d->connectButton->setText("Disconnect");
-                // disable all buttons
+                // enable send button
+                d->sendButton->setEnabled(true);
+                // disable all remaining buttons
                 d->MRMLNodeComboBox->setEnabled(false);
                 d->serverModeRadioButton->setEnabled(false);
                 d->clientModeRadioButton->setEnabled(false);
                 d->hostNameLineEdit->setEnabled(false);
                 d->portLineEdit->setEnabled(false);
-                // send synchronized nodes
-                vtkCollection* syncNodes = collabNode->GetCollaborationSynchronizedNodes();
-                vtkStringArray* syncIDs = collabNode->GetCollaborationSynchronizedNodeIDs();
-                int numNodes = syncNodes->GetNumberOfItems();
-                for (int nodeIndex = numNodes - 1; nodeIndex >= 0; nodeIndex--)
-                {
-                    vtkMRMLNode* syncNode = vtkMRMLNode::SafeDownCast(syncNodes->GetItemAsObject(nodeIndex));
-                    connectorNode->PushNode(syncNode);
-                    vtkStdString ID = syncIDs->GetValue(nodeIndex);
-                    std::cout << this->mrmlScene()->GetNodeByID(ID)->GetName() << "\n";
-                }
             }
             // Stop the connection
             else {
                 connectorNode->Stop();
                 d->connectButton->setText("Connect");
-                //// enable all buttons
+                // disable send button
+                d->sendButton->setEnabled(false);
+                //// enable all remaining buttons
                 d->MRMLNodeComboBox->setEnabled(true);
                 d->serverModeRadioButton->setEnabled(true);
                 d->clientModeRadioButton->setEnabled(true);
@@ -307,6 +304,7 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                     d->AvailableNodesTreeView->model()->invalidateFilter();
                     // add as output node of the connector node
                     connectorNode->RegisterOutgoingMRMLNode(selectedNode);
+                    selectedNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
                     connectorNode->PushNode(selectedNode);
                 }
             }
@@ -342,6 +340,34 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                     d->AvailableNodesTreeView->model()->invalidateFilter();
                     // remove as output node of the connector node
                     connectorNode->UnregisterOutgoingMRMLNode(selectedNode);
+                    selectedNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                }
+            }
+        }
+    }
+}
+
+void qSlicerCollaborationModuleWidget::sendNodesForSynchronization()
+{
+    Q_D(qSlicerCollaborationModuleWidget);
+
+    // Get the selected collaboration node
+    vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
+
+    if (collabNode) {
+        // Get the connector node associated to the collaboration node
+        vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+
+        if (connectorNode) {
+            // Start the connection
+            if (d->connectButton->text() == "Disconnect") {
+                // send synchronized nodes
+                vtkCollection* syncNodes = collabNode->GetCollaborationSynchronizedNodes();
+                int numNodes = syncNodes->GetNumberOfItems();
+                for (int nodeIndex = numNodes - 1; nodeIndex >= 0; nodeIndex--)
+                {
+                    vtkMRMLNode* syncNode = vtkMRMLNode::SafeDownCast(syncNodes->GetItemAsObject(nodeIndex));
+                    connectorNode->PushNode(syncNode);
                 }
             }
         }
