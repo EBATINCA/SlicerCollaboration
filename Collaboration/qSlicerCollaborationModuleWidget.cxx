@@ -35,6 +35,10 @@
 #include "qMRMLSortFilterSubjectHierarchyProxyModel.h"
 #include "vtkCollection.h"
 #include "qMRMLSubjectHierarchyModel.h";
+#include "vtkMRMLModelDisplayNode.h"
+#include "vtkMRMLTextNode.h"
+#include "vtkMRMLModelNode.h"
+
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
@@ -299,13 +303,47 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                     selectedNode->SetAttribute(selected_collab_node, "true");
                     // add node reference to the collaboration node
                     collabNode->AddCollaborationSynchronizedNodeID(selectedNode->GetID());
-                    // update tree visibility
-                    d->SynchronizedTreeView->model()->invalidateFilter();
-                    d->AvailableNodesTreeView->model()->invalidateFilter();
                     // add as output node of the connector node
                     connectorNode->RegisterOutgoingMRMLNode(selectedNode);
                     selectedNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
-                    connectorNode->PushNode(selectedNode);
+                    // check if it is a model node
+                    vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(selectedNode);
+                    if (modelNode)
+                    {
+                        // get the display node
+                        vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::SafeDownCast(modelNode->GetDisplayNode());
+                        // create a text node
+                        vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLTextNode"));
+                        // hide from Data module
+                        textNode->SetHideFromEditors(1);
+                        this->mrmlScene()->AddNode(textNode);
+                        // write an XML text with the display node attributes
+                        std::stringstream ss;
+                        ss << "<MRMLNode ClassName = \"vtkMRMLModelDisplayNode\" ModelName = \"";
+                        ss << modelNode->GetName();
+                        ss << "\"";
+                        displayNode->WriteXML(ss, 0);
+                        ss << " />";
+                        // add the XML to the text node
+                        textNode->SetText(ss.str());
+                        // Set the same name as the model node + Text
+                        char* modelNodeName = modelNode->GetName();
+                        char textName[] = "Text";
+                        char* textNodeName = new char[std::strlen(modelNodeName) + std::strlen(textName) + 1];
+                        std::strcpy(textNodeName, modelNodeName);
+                        std::strcat(textNodeName, textName);
+                        textNode->SetName(textNodeName);
+                        // set attribute of the collaboration node to the selected node
+                        textNode->SetAttribute(selected_collab_node, "true");
+                        // add node reference to the collaboration node
+                        collabNode->AddCollaborationSynchronizedNodeID(textNode->GetID());
+                        // add as output node of the connector node
+                        textNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
+                        connectorNode->RegisterOutgoingMRMLNode(textNode);
+                    }
+                    // update tree visibility
+                    d->SynchronizedTreeView->model()->invalidateFilter();
+                    d->AvailableNodesTreeView->model()->invalidateFilter();
                 }
             }
         }
@@ -335,12 +373,36 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                     selectedNode->RemoveAttribute(selected_collab_node);
                     // remove node reference from the collaboration node
                     collabNode->RemoveCollaborationSynchronizedNodeID(selectedNode->GetID());
-                    // update tree visibility
-                    d->SynchronizedTreeView->model()->invalidateFilter();
-                    d->AvailableNodesTreeView->model()->invalidateFilter();
                     // remove as output node of the connector node
                     connectorNode->UnregisterOutgoingMRMLNode(selectedNode);
                     selectedNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                    // check if it is a model node
+                    vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(selectedNode);
+                    if (modelNode)
+                    {
+                        // Get the name of the text node storing the display node information
+                        char* modelNodeName = modelNode->GetName();
+                        char textName[] = "Text";
+                        char* textNodeName = new char[std::strlen(modelNodeName) + std::strlen(textName) + 1];
+                        std::strcpy(textNodeName, modelNodeName);
+                        std::strcat(textNodeName, textName);
+                        // Get the text node
+                        // vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetFirstNodeByName(textNodeName));
+                        vtkSmartPointer<vtkMRMLTextNode> textNode =
+                            vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetFirstNode(textNodeName, "vtkMRMLTextNode"));
+                        // remove the attribute of the collaboration node from the selected node
+                        textNode->RemoveAttribute(selected_collab_node);
+                        // remove node reference from the collaboration node
+                        collabNode->RemoveCollaborationSynchronizedNodeID(textNode->GetID());
+                        // remove as output node of the connector node
+                        textNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                        connectorNode->UnregisterOutgoingMRMLNode(textNode);
+                        // remove from scene
+                        this->mrmlScene()->RemoveNode(textNode);
+                    }
+                    // update tree visibility
+                    d->SynchronizedTreeView->model()->invalidateFilter();
+                    d->AvailableNodesTreeView->model()->invalidateFilter();
                 }
             }
         }

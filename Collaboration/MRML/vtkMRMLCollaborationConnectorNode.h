@@ -57,6 +57,10 @@ protected:
   ~vtkMRMLCollaborationConnectorNode() override;
   vtkMRMLCollaborationConnectorNode(const vtkMRMLCollaborationConnectorNode&);
   void operator=(const vtkMRMLCollaborationConnectorNode&);
+
+  unsigned int AssignOutGoingNodeToDevice(vtkMRMLNode* node, igtlioDevicePointer device) override;
+  vtkMRMLNode* CreateNewMRMLNodeForDevice(igtlioDevice* device) override;
+  void ProcessIncomingDeviceModifiedEvent(vtkObject* caller, unsigned long event, igtlioDevice* modifiedDevice) override;
 };
 
 #endif
