@@ -39,6 +39,9 @@
 #include "vtkMRMLTextNode.h"
 #include "vtkMRMLModelNode.h"
 
+// Logic includes
+#include "vtkSlicerCollaborationLogic.h"
+
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
@@ -123,6 +126,16 @@ void qSlicerCollaborationModuleWidget::setCollaborationNode(vtkMRMLNode* node)
 
     // Make sure the parameter set node is selected (in case the function was not called by the selector combobox signal)
     d->MRMLNodeComboBox->setCurrentNode(collabNode);
+
+    if (this->logic() == nullptr)
+    {
+        return;
+    }
+    vtkSlicerCollaborationLogic* collaborationLogic = vtkSlicerCollaborationLogic::SafeDownCast(this->logic());
+    if (collaborationLogic)
+    {
+        collaborationLogic->collaborationNodeSelected = collabNode;
+    }
 
     // Each time the node is modified, the qt widgets are updated
     qvtkReconnect(collabNode, vtkCommand::ModifiedEvent, this, SLOT(updateWidgetFromMRML()));
@@ -375,7 +388,10 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                     collabNode->RemoveCollaborationSynchronizedNodeID(selectedNode->GetID());
                     // remove as output node of the connector node
                     connectorNode->UnregisterOutgoingMRMLNode(selectedNode);
-                    selectedNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                    const char* att_push = selectedNode->GetAttribute("OpenIGTLinkIF.pushOnConnect");
+                    if (att_push) {
+                        selectedNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                    }
                     // check if it is a model node
                     vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(selectedNode);
                     if (modelNode)
@@ -390,15 +406,21 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                         // vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetFirstNodeByName(textNodeName));
                         vtkSmartPointer<vtkMRMLTextNode> textNode =
                             vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetFirstNode(textNodeName, "vtkMRMLTextNode"));
-                        // remove the attribute of the collaboration node from the selected node
-                        textNode->RemoveAttribute(selected_collab_node);
-                        // remove node reference from the collaboration node
-                        collabNode->RemoveCollaborationSynchronizedNodeID(textNode->GetID());
-                        // remove as output node of the connector node
-                        textNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
-                        connectorNode->UnregisterOutgoingMRMLNode(textNode);
-                        // remove from scene
-                        this->mrmlScene()->RemoveNode(textNode);
+                        if (textNode)
+                        {
+                            // remove the attribute of the collaboration node from the selected node
+                            textNode->RemoveAttribute(selected_collab_node);
+                            // remove node reference from the collaboration node
+                            collabNode->RemoveCollaborationSynchronizedNodeID(textNode->GetID());
+                            // remove as output node of the connector node
+                            const char* att_push_text = selectedNode->GetAttribute("OpenIGTLinkIF.pushOnConnect");
+                            if (att_push_text) {
+                                textNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                            }
+                            connectorNode->UnregisterOutgoingMRMLNode(textNode);
+                            // remove from scene
+                            this->mrmlScene()->RemoveNode(textNode);
+                        }
                     }
                     // update tree visibility
                     d->SynchronizedTreeView->model()->invalidateFilter();

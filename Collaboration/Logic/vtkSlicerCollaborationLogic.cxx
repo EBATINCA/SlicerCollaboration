@@ -45,6 +45,7 @@ vtkStandardNewMacro(vtkSlicerCollaborationLogic);
 vtkSlicerCollaborationLogic::vtkSlicerCollaborationLogic()
 {
   vtkSmartPointer<vtkMRMLCollaborationNode> collaborationNode;
+  this->collaborationNodeSelected = nullptr;
 }
 
 //----------------------------------------------------------------------------
@@ -127,6 +128,23 @@ void vtkSlicerCollaborationLogic
             connectorNode->SetType(0);
         }
         this->Modified();
+    }
+    else if (node->IsA("vtkMRMLModelNode") || node->IsA("vtkMRMLLinearTransformNode")|| node->IsA("vtkMRMLMarkupsFiducialNode"))
+    {
+        // check if it was received through an OpenIGTLink connection
+        const char* nodeDescription = node->GetDescription();
+        if (nodeDescription) {
+            if (strcmp(nodeDescription, "Received by OpenIGTLink") == 0)
+            {
+                // set attribute of the collaboration node to the added node
+                node->SetAttribute(this->collaborationNodeSelected->GetID(), "true");
+                // add node reference to the collaboration node
+                if (this->collaborationNodeSelected)
+                {
+                    this->collaborationNodeSelected->AddCollaborationSynchronizedNodeID(node->GetID());
+                }
+            }
+        }
     }
 }
 

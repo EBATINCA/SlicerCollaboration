@@ -31,11 +31,15 @@
 #include <vtkObjectFactory.h>
 #include <vtkXMLUtilities.h>
 #include <vtkXMLDataElement.h>
+#include <vtkPolyData.h>
 
 // STD includes
 #include <sstream>
 #include <vtkXMLDataElement.h>
 #include <strstream>
+
+// OpenIGTLinkIO include
+#include <igtlioPolyDataDevice.h>
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationConnectorNode);
@@ -195,15 +199,42 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
                     const char** atts = (atts_v.data());
                     // get the display node from the corresponding model
                     const char* modelName = res->GetAttribute("ModelName");
-                    vtkMRMLModelNode* modelNode2 = vtkMRMLModelNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(modelName));
-                    vtkMRMLModelDisplayNode* displayNode = modelNode2->GetModelDisplayNode();
-                    if (displayNode)
+                    vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(modelName));
+                    // if the model already exists in the scene, apply the display node
+                    if (modelNode)
                     {
+                        vtkMRMLModelDisplayNode* currentDisplayNode = modelNode->GetModelDisplayNode();
+                        if (currentDisplayNode)
+                        {
+                            // create display node and apply attributes
+                            vtkMRMLModelDisplayNode* newDisplayNode = vtkMRMLModelDisplayNode::New();
+                            newDisplayNode->ReadXMLAttributes(atts);
+                            // copy display node attributes to the current display node
+                            currentDisplayNode->Copy(newDisplayNode);
+                            // set name
+                            char displayName[] = "DisplayNode";
+                            char* displayNodeName = new char[std::strlen(modelName) + std::strlen(displayName) + 1];
+                            std::strcpy(displayNodeName, modelName);
+                            std::strcat(displayNodeName, displayName);
+                            currentDisplayNode->SetName(displayNodeName);
+                            currentDisplayNode->Modified();
+                            modelNode->Modified();
+                        }
+                    }
+                    else
+                    {
+                        vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::New();
                         // apply attributes
                         displayNode->ReadXMLAttributes(atts);
-                        // get the corresponding node and assign the display node
+                        // set name
+                        char displayName[] = "DisplayNode";
+                        char* displayNodeName = new char[std::strlen(modelName) + std::strlen(displayName) + 1];
+                        std::strcpy(displayNodeName, modelName);
+                        std::strcat(displayNodeName, displayName);
+                        displayNode->SetName(displayNodeName);
+                        // add display node to scene
                         this->GetScene()->AddNode(displayNode);
-                        displayNode->Modified();                        
+                        displayNode->Modified();
                     }
                 }
             }
@@ -216,7 +247,26 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
                 textNode->SetHideFromEditors(0);
                 textNode->Modified();
             }
-            
+        }
+        else if (strcmp(deviceType.c_str(), "POLYDATA") == 0)
+        {
+            igtlioPolyDataDevice* polyDevice = reinterpret_cast<igtlioPolyDataDevice*>(modifiedDevice);
+            vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(modifiedNode);
+            modelNode->SetAndObservePolyData(polyDevice->GetContent().polydata);
+            // see if the display node was already defined
+            char* modelNodeName = modelNode->GetName();
+            char displayName[] = "DisplayNode";
+            char* displayNodeName = new char[std::strlen(modelNodeName) + std::strlen(displayName) + 1];
+            std::strcpy(displayNodeName, modelNodeName);
+            std::strcat(displayNodeName, displayName);
+            vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(displayNodeName));
+            if (displayNode)
+            {
+                vtkMRMLModelDisplayNode* currentDisplayNode = vtkMRMLModelDisplayNode::SafeDownCast(modelNode->GetDisplayNode());
+                currentDisplayNode->Copy(displayNode);
+                displayNode->Modified();
+            }
+            modelNode->Modified();
         }
     }
     Superclass::ProcessIncomingDeviceModifiedEvent(caller, event, modifiedDevice);

@@ -32,6 +32,7 @@
 #include "vtkSlicerModuleLogic.h"
 
 // MRML includes
+#include "vtkMRMLCollaborationNode.h"
 
 // STD includes
 #include <cstdlib>
@@ -48,6 +49,7 @@ public:
   static vtkSlicerCollaborationLogic *New();
   vtkTypeMacro(vtkSlicerCollaborationLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
+  vtkMRMLCollaborationNode* collaborationNodeSelected;
 
 protected:
   vtkSlicerCollaborationLogic();
