@@ -207,7 +207,10 @@ void qSlicerCollaborationModuleWidget::updateWidgetFromMRML()
                 d->hostNameLineEdit->setEnabled(true);
             }
         }
-    }   
+    }
+    // update tree visibility
+    d->SynchronizedTreeView->model()->invalidateFilter();
+    d->AvailableNodesTreeView->model()->invalidateFilter();
 }
 
 void qSlicerCollaborationModuleWidget::onConnectButtonClicked()

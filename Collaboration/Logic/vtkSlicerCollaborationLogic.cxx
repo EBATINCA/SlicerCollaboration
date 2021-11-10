@@ -129,7 +129,8 @@ void vtkSlicerCollaborationLogic
         }
         this->Modified();
     }
-    else if (node->IsA("vtkMRMLModelNode") || node->IsA("vtkMRMLLinearTransformNode")|| node->IsA("vtkMRMLMarkupsFiducialNode"))
+    else if (node->IsA("vtkMRMLModelNode") || node->IsA("vtkMRMLLinearTransformNode")|| 
+        node->IsA("vtkMRMLMarkupsFiducialNode") || node->IsA("vtkMRMLTextNode") || node->IsA("vtkMRMLScalarVolumeNode"))
     {
         // check if it was received through an OpenIGTLink connection
         const char* nodeDescription = node->GetDescription();

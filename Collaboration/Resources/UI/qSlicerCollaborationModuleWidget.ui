@@ -156,6 +156,8 @@
             <string>vtkMRMLModelNode</string>
             <string>vtkMRMLMarkupsFiducialNode</string>
             <string>vtkMRMLLinearTransformNode</string>
+            <string>vtkMRMLTextNode</string>
+            <string>vtkMRMLScalarVolumeNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
@@ -211,6 +213,8 @@
             <string>vtkMRMLModelNode</string>
             <string>vtkMRMLLinearTransformNode</string>
             <string>vtkMRMLMarkupsFiducialNode</string>
+            <string>vtkMRMLTextNode</string>
+            <string>vtkMRMLScalarVolumeNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
