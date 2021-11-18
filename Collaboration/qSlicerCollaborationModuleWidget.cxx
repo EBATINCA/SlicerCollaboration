@@ -41,6 +41,7 @@
 
 // Logic includes
 #include "vtkSlicerCollaborationLogic.h"
+#include <vtkMRMLMarkupsLineNode.h>
 
 
 //-----------------------------------------------------------------------------
@@ -323,9 +324,9 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                     connectorNode->RegisterOutgoingMRMLNode(selectedNode);
                     selectedNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
                     // check if it is a model node
-                    vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(selectedNode);
-                    if (modelNode)
+                    if (selectedNode->IsA("vtkMRMLModelNode"))
                     {
+                        vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(selectedNode);
                         // get the display node
                         vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::SafeDownCast(modelNode->GetDisplayNode());
                         // create a text node
@@ -347,6 +348,60 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         char textName[] = "Text";
                         char* textNodeName = new char[std::strlen(modelNodeName) + std::strlen(textName) + 1];
                         std::strcpy(textNodeName, modelNodeName);
+                        std::strcat(textNodeName, textName);
+                        textNode->SetName(textNodeName);
+                        // set attribute of the collaboration node to the selected node
+                        textNode->SetAttribute(selected_collab_node, "true");
+                        // add node reference to the collaboration node
+                        collabNode->AddCollaborationSynchronizedNodeID(textNode->GetID());
+                        // add as output node of the connector node
+                        textNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
+                        connectorNode->RegisterOutgoingMRMLNode(textNode);
+                    }
+                    // check if it is a line markups node (vtkMRMLMarkupsLineNode)
+                    else if (selectedNode->IsA("vtkMRMLMarkupsLineNode"))
+                    {
+                        vtkMRMLMarkupsLineNode* lineNode = vtkMRMLMarkupsLineNode::SafeDownCast(selectedNode);
+                        // get control points
+                        vtkNew<vtkPoints> controlPoints;
+                        lineNode->GetControlPointPositionsWorld(controlPoints);
+                        int numberOfPoints = lineNode->GetNumberOfControlPoints();
+                        std::string controlPointsText = " ControlPoints = \"";
+                        for (int p = 0; p < numberOfPoints; p++)
+                        {
+                            double point[3];
+                            controlPoints->GetPoint(p, point);
+                            controlPointsText.append("[");
+                            controlPointsText.append(std::to_string(point[0]));
+                            controlPointsText.append(",");
+                            controlPointsText.append(std::to_string(point[1]));
+                            controlPointsText.append(",");
+                            controlPointsText.append(std::to_string(point[2]));
+                            controlPointsText.append("]");
+                            if (p < (numberOfPoints - 1))
+                            {
+                                controlPointsText.append(";");
+                            }
+                        }
+                        controlPointsText.append("\"");
+                        // create a text node
+                        vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLTextNode"));
+                        // hide from Data module
+                        textNode->SetHideFromEditors(1);
+                        this->mrmlScene()->AddNode(textNode);
+                        // write an XML text with the display node attributes
+                        std::stringstream ss;
+                        ss << "<MRMLNode ClassName = \"vtkMRMLMarkupsLineNode\" ";
+                        ss << controlPointsText;
+                        lineNode->WriteXML(ss, 0);
+                        ss << " />";
+                        // add the XML to the text node
+                        textNode->SetText(ss.str());
+                        // Set the same name as the model node + Text
+                        char* lineNodeName = lineNode->GetName();
+                        char textName[] = "Text";
+                        char* textNodeName = new char[std::strlen(lineNodeName) + std::strlen(textName) + 1];
+                        std::strcpy(textNodeName, lineNodeName);
                         std::strcat(textNodeName, textName);
                         textNode->SetName(textNodeName);
                         // set attribute of the collaboration node to the selected node

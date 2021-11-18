@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>544</width>
+    <width>547</width>
     <height>656</height>
    </rect>
   </property>
@@ -158,6 +158,7 @@
             <string>vtkMRMLLinearTransformNode</string>
             <string>vtkMRMLTextNode</string>
             <string>vtkMRMLScalarVolumeNode</string>
+            <string>vtkMRMLMarkupsLineNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
@@ -215,6 +216,7 @@
             <string>vtkMRMLMarkupsFiducialNode</string>
             <string>vtkMRMLTextNode</string>
             <string>vtkMRMLScalarVolumeNode</string>
+            <string>vtkMRMLMarkupsLineNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
