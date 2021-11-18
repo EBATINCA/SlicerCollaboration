@@ -42,6 +42,7 @@
 // Logic includes
 #include "vtkSlicerCollaborationLogic.h"
 #include <vtkMRMLMarkupsLineNode.h>
+#include <vtkMRMLMarkupsPlaneNode.h>
 
 
 //-----------------------------------------------------------------------------
@@ -399,6 +400,60 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         textNode->SetText(ss.str());
                         // Set the same name as the model node + Text
                         char* lineNodeName = lineNode->GetName();
+                        char textName[] = "Text";
+                        char* textNodeName = new char[std::strlen(lineNodeName) + std::strlen(textName) + 1];
+                        std::strcpy(textNodeName, lineNodeName);
+                        std::strcat(textNodeName, textName);
+                        textNode->SetName(textNodeName);
+                        // set attribute of the collaboration node to the selected node
+                        textNode->SetAttribute(selected_collab_node, "true");
+                        // add node reference to the collaboration node
+                        collabNode->AddCollaborationSynchronizedNodeID(textNode->GetID());
+                        // add as output node of the connector node
+                        textNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
+                        connectorNode->RegisterOutgoingMRMLNode(textNode);
+                    }
+                    // check if it is a plane markups node (vtkMRMLMarkupsPlaneNode)
+                    else if (selectedNode->IsA("vtkMRMLMarkupsPlaneNode"))
+                    {
+                        vtkMRMLMarkupsPlaneNode* planeNode = vtkMRMLMarkupsPlaneNode::SafeDownCast(selectedNode);
+                        // get control points
+                        vtkNew<vtkPoints> controlPoints;
+                        planeNode->GetControlPointPositionsWorld(controlPoints);
+                        int numberOfPoints = planeNode->GetNumberOfControlPoints();
+                        std::string controlPointsText = " ControlPoints = \"";
+                        for (int p = 0; p < numberOfPoints; p++)
+                        {
+                            double point[3];
+                            controlPoints->GetPoint(p, point);
+                            controlPointsText.append("[");
+                            controlPointsText.append(std::to_string(point[0]));
+                            controlPointsText.append(",");
+                            controlPointsText.append(std::to_string(point[1]));
+                            controlPointsText.append(",");
+                            controlPointsText.append(std::to_string(point[2]));
+                            controlPointsText.append("]");
+                            if (p < (numberOfPoints - 1))
+                            {
+                                controlPointsText.append(";");
+                            }
+                        }
+                        controlPointsText.append("\"");
+                        // create a text node
+                        vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLTextNode"));
+                        // hide from Data module
+                        textNode->SetHideFromEditors(1);
+                        this->mrmlScene()->AddNode(textNode);
+                        // write an XML text with the display node attributes
+                        std::stringstream ss;
+                        ss << "<MRMLNode ClassName = \"vtkMRMLMarkupsPlaneNode\" ";
+                        ss << controlPointsText;
+                        planeNode->WriteXML(ss, 0);
+                        ss << " />";
+                        // add the XML to the text node
+                        textNode->SetText(ss.str());
+                        // Set the same name as the model node + Text
+                        char* lineNodeName = planeNode->GetName();
                         char textName[] = "Text";
                         char* textNodeName = new char[std::strlen(lineNodeName) + std::strlen(textName) + 1];
                         std::strcpy(textNodeName, lineNodeName);

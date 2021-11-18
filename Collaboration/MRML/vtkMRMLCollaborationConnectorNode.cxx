@@ -41,6 +41,7 @@
 // OpenIGTLinkIO include
 #include <igtlioPolyDataDevice.h>
 #include <vtkMRMLMarkupsLineNode.h>
+#include <vtkMRMLMarkupsPlaneNode.h>
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationConnectorNode);
@@ -238,8 +239,8 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
                         displayNode->Modified();
                     }
                 }
-                // if it is a line markups node
-                else if (strcmp(res->GetAttribute("ClassName"), "vtkMRMLMarkupsLineNode") == 0)
+                // if it is a plane markups node
+                else if (strcmp(res->GetAttribute("ClassName"), "vtkMRMLMarkupsPlaneNode") == 0)
                 {
                     std::vector<const char*> atts_v;
                     for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
@@ -251,9 +252,9 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
                     }
                     atts_v.push_back(nullptr);
                     const char** atts = (atts_v.data());
-                    vtkMRMLMarkupsLineNode* lineNode = vtkMRMLMarkupsLineNode::New();
+                    vtkMRMLMarkupsPlaneNode* planeNode = vtkMRMLMarkupsPlaneNode::New();
                     // apply attributes
-                    lineNode->ReadXMLAttributes(atts);
+                    planeNode->ReadXMLAttributes(atts);
 
                     // get control points attribute
                     std::string controlPointsStr = res->GetAttribute("ControlPoints");
@@ -289,12 +290,70 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
                         newControlPoint->Position[0] = atof(vect[0].c_str());
                         newControlPoint->Position[1] = atof(vect[1].c_str());
                         newControlPoint->Position[2] = atof(vect[2].c_str());
-                        lineNode->AddControlPoint(newControlPoint, true);
+                        planeNode->AddControlPoint(newControlPoint, true);
                         newControlPoint->PositionStatus = true;
                     }
                     // add node to scene
-                    this->GetScene()->AddNode(lineNode);
-                    lineNode->UpdateAllMeasurements();
+                    this->GetScene()->AddNode(planeNode);
+                    planeNode->UpdateAllMeasurements();
+                }
+                // if it is a line markups node
+                else if (strcmp(res->GetAttribute("ClassName"), "vtkMRMLMarkupsLineNode") == 0)
+                {
+                std::vector<const char*> atts_v;
+                for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
+                {
+                    const char* attName = res->GetAttributeName(attributeIndex);
+                    const char* attValue = res->GetAttribute(attName);
+                    atts_v.push_back(attName);
+                    atts_v.push_back(attValue);
+                }
+                atts_v.push_back(nullptr);
+                const char** atts = (atts_v.data());
+                vtkMRMLMarkupsLineNode* lineNode = vtkMRMLMarkupsLineNode::New();
+                // apply attributes
+                lineNode->ReadXMLAttributes(atts);
+
+                // get control points attribute
+                std::string controlPointsStr = res->GetAttribute("ControlPoints");
+                // get every control point, separated by ;
+                std::vector<std::string> vectControlPoints;
+                std::stringstream ss2(controlPointsStr);
+                while (ss2.good())
+                {
+                    std::string substr;
+                    getline(ss2, substr, ';');
+                    vectControlPoints.push_back(substr);
+                }
+                for (int controlPointIndex = 0; controlPointIndex < vectControlPoints.size(); controlPointIndex++)
+                {
+                    // get string of control point
+                    std::string token = vectControlPoints[controlPointIndex];
+                    // remove brackets
+                    std::string brackets = "[]";
+                    for (char c : brackets) {
+                        token.erase(std::remove(token.begin(), token.end(), c), token.end());
+                    }
+                    // get every coordinate
+                    std::stringstream ss(token);
+                    std::vector<std::string> vect;
+                    while (ss.good())
+                    {
+                        std::string substr;
+                        getline(ss, substr, ',');
+                        vect.push_back(substr);
+                    }
+                    // add control point to line node
+                    vtkMRMLMarkupsNode::ControlPoint* newControlPoint = new vtkMRMLMarkupsNode::ControlPoint;
+                    newControlPoint->Position[0] = atof(vect[0].c_str());
+                    newControlPoint->Position[1] = atof(vect[1].c_str());
+                    newControlPoint->Position[2] = atof(vect[2].c_str());
+                    lineNode->AddControlPoint(newControlPoint, true);
+                    newControlPoint->PositionStatus = true;
+                }
+                // add node to scene
+                this->GetScene()->AddNode(lineNode);
+                lineNode->UpdateAllMeasurements();
                 }
             }
             else

@@ -159,6 +159,7 @@
             <string>vtkMRMLTextNode</string>
             <string>vtkMRMLScalarVolumeNode</string>
             <string>vtkMRMLMarkupsLineNode</string>
+            <string>vtkMRMLMarkupsPlaneNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
@@ -217,6 +218,7 @@
             <string>vtkMRMLTextNode</string>
             <string>vtkMRMLScalarVolumeNode</string>
             <string>vtkMRMLMarkupsLineNode</string>
+            <string>vtkMRMLMarkupsPlaneNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
