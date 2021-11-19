@@ -287,15 +287,36 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
         newControlPoint->PositionStatus = true;
         ControlPointsList.push_back(newControlPoint);
     }
-    // add node to scene
-        std::string className = res->GetAttribute("ClassName");
+    // see if node exists
+    const char* nodeName = res->GetAttribute("name");
+    std::string className = res->GetAttribute("ClassName");
+    vtkMRMLNode* exisitingNode = vtkMRMLNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+    std::string existingNodeClassName = "";
+    bool nodeExists = false;
+    if (exisitingNode)
+    {
+        existingNodeClassName = exisitingNode->GetClassName();
+    }
+    if (strcmp(className.c_str(), existingNodeClassName.c_str()) == 0)
+    {
+        nodeExists = true;
+    }
     if (className == "vtkMRMLMarkupsLineNode")
     {
-        vtkMRMLMarkupsLineNode* markupsNodeFinal = vtkMRMLMarkupsLineNode::New();
+        vtkMRMLMarkupsLineNode* markupsNodeFinal;
+        if (nodeExists)
+        {
+            markupsNodeFinal = vtkMRMLMarkupsLineNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        }
+        else
+        {
+            markupsNodeFinal = vtkMRMLMarkupsLineNode::New();
+        }
         // apply attributes
         markupsNodeFinal->ReadXMLAttributes(atts);
         // apply control points
         int numberOfControlPoints = ControlPointsList.size();
+        markupsNodeFinal->RemoveAllControlPoints();
         for (int cp = 0; cp < numberOfControlPoints; cp++)
         {
             markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
@@ -305,11 +326,20 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
     }
     else if (className == "vtkMRMLMarkupsPlaneNode")
     {
-        vtkMRMLMarkupsPlaneNode* markupsNodeFinal = vtkMRMLMarkupsPlaneNode::New();
+        vtkMRMLMarkupsPlaneNode* markupsNodeFinal;
+        if (nodeExists)
+        {
+            markupsNodeFinal = vtkMRMLMarkupsPlaneNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        }
+        else
+        {
+            markupsNodeFinal = vtkMRMLMarkupsPlaneNode::New();
+        }
         // apply attributes
         markupsNodeFinal->ReadXMLAttributes(atts);
         // apply control points
         int numberOfControlPoints = ControlPointsList.size();
+        markupsNodeFinal->RemoveAllControlPoints();
         for (int cp = 0; cp < numberOfControlPoints; cp++)
         {
             markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
@@ -319,11 +349,20 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
     }
     else if (className == "vtkMRMLMarkupsAngleNode")
     {
-        vtkMRMLMarkupsAngleNode* markupsNodeFinal = vtkMRMLMarkupsAngleNode::New();
+        vtkMRMLMarkupsAngleNode* markupsNodeFinal;
+        if (nodeExists)
+        {
+            markupsNodeFinal = vtkMRMLMarkupsAngleNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        }
+        else
+        {
+            markupsNodeFinal = vtkMRMLMarkupsAngleNode::New();
+        }
         // apply attributes
         markupsNodeFinal->ReadXMLAttributes(atts);
         // apply control points
         int numberOfControlPoints = ControlPointsList.size();
+        markupsNodeFinal->RemoveAllControlPoints();
         for (int cp = 0; cp < numberOfControlPoints; cp++)
         {
             markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
@@ -333,11 +372,20 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
     }
     else if (className == "vtkMRMLMarkupsCurveNode")
     {
-        vtkMRMLMarkupsCurveNode* markupsNodeFinal = vtkMRMLMarkupsCurveNode::New();
+        vtkMRMLMarkupsCurveNode* markupsNodeFinal;
+        if (nodeExists)
+        {
+            markupsNodeFinal = vtkMRMLMarkupsCurveNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        }
+        else
+        {
+            markupsNodeFinal = vtkMRMLMarkupsCurveNode::New();
+        }
         // apply attributes
         markupsNodeFinal->ReadXMLAttributes(atts);
         // apply control points
         int numberOfControlPoints = ControlPointsList.size();
+        markupsNodeFinal->RemoveAllControlPoints();
         for (int cp = 0; cp < numberOfControlPoints; cp++)
         {
             markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
@@ -347,11 +395,20 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
     }
     else if (className == "vtkMRMLMarkupsClosedCurveNode")
     {
-        vtkMRMLMarkupsClosedCurveNode* markupsNodeFinal = vtkMRMLMarkupsClosedCurveNode::New();
+        vtkMRMLMarkupsClosedCurveNode* markupsNodeFinal;
+        if (nodeExists)
+        {
+            markupsNodeFinal = vtkMRMLMarkupsClosedCurveNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        }
+        else
+        {
+            markupsNodeFinal = vtkMRMLMarkupsClosedCurveNode::New();
+        }
         // apply attributes
         markupsNodeFinal->ReadXMLAttributes(atts);
         // apply control points
         int numberOfControlPoints = ControlPointsList.size();
+        markupsNodeFinal->RemoveAllControlPoints();
         for (int cp = 0; cp < numberOfControlPoints; cp++)
         {
             markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
