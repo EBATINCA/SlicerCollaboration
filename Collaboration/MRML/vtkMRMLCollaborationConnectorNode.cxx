@@ -189,7 +189,7 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
             {
                 int numberOfAttributes = res->GetNumberOfAttributes();
                 // if it is a ModelDisplayNode
-                if (strcmp(res->GetAttribute("ClassName"), "vtkMRMLModelDisplayNode") == 0)
+                if (strcmp(res->GetAttribute("SuperclassName"), "vtkMRMLDisplayNode") == 0)
                 {
                     addDisplayNode(res);
                 }
@@ -375,44 +375,90 @@ void vtkMRMLCollaborationConnectorNode::addDisplayNode(vtkXMLDataElement* res)
     atts_v.push_back(nullptr);
     const char** atts = (atts_v.data());
     // get the display node from the corresponding model
-    const char* modelName = res->GetAttribute("ModelName");
-    vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(modelName));
-    // if the model already exists in the scene, apply the display node
-    if (modelNode)
+    const char* nodeName = res->GetAttribute("NodeName");
+    // get node type
+    const char* className = res->GetAttribute("ClassName");
+    if (strcmp(className, "vtkMRMLModelDisplayNode") == 0)
     {
-        vtkMRMLModelDisplayNode* currentDisplayNode = modelNode->GetModelDisplayNode();
-        if (currentDisplayNode)
+        vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        // if the model already exists in the scene, apply the display node
+        if (modelNode)
         {
-            // create display node and apply attributes
-            vtkMRMLModelDisplayNode* newDisplayNode = vtkMRMLModelDisplayNode::New();
-            newDisplayNode->ReadXMLAttributes(atts);
-            // copy display node attributes to the current display node
-            currentDisplayNode->Copy(newDisplayNode);
+            vtkMRMLModelDisplayNode* currentDisplayNode = modelNode->GetModelDisplayNode();
+            if (currentDisplayNode)
+            {
+                // create display node and apply attributes
+                vtkMRMLModelDisplayNode* newDisplayNode = vtkMRMLModelDisplayNode::New();
+                newDisplayNode->ReadXMLAttributes(atts);
+                // copy display node attributes to the current display node
+                currentDisplayNode->Copy(newDisplayNode);
+                // set name
+                char displayName[] = "DisplayNode";
+                char* displayNodeName = new char[std::strlen(nodeName) + std::strlen(displayName) + 1];
+                std::strcpy(displayNodeName, nodeName);
+                std::strcat(displayNodeName, displayName);
+                currentDisplayNode->SetName(displayNodeName);
+                currentDisplayNode->Modified();
+                modelNode->Modified();
+            }
+        }
+        else
+        {
+            vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::New();
+            // apply attributes
+            displayNode->ReadXMLAttributes(atts);
             // set name
             char displayName[] = "DisplayNode";
-            char* displayNodeName = new char[std::strlen(modelName) + std::strlen(displayName) + 1];
-            std::strcpy(displayNodeName, modelName);
+            char* displayNodeName = new char[std::strlen(nodeName) + std::strlen(displayName) + 1];
+            std::strcpy(displayNodeName, nodeName);
             std::strcat(displayNodeName, displayName);
-            currentDisplayNode->SetName(displayNodeName);
-            currentDisplayNode->Modified();
-            modelNode->Modified();
+            displayNode->SetName(displayNodeName);
+            // add display node to scene
+            this->GetScene()->AddNode(displayNode);
+            displayNode->Modified();
         }
     }
-    else
+    if (strcmp(className, "vtkMRMLMarkupsDisplayNode") == 0)
     {
-        vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::New();
-        // apply attributes
-        displayNode->ReadXMLAttributes(atts);
-        // set name
-        char displayName[] = "DisplayNode";
-        char* displayNodeName = new char[std::strlen(modelName) + std::strlen(displayName) + 1];
-        std::strcpy(displayNodeName, modelName);
-        std::strcat(displayNodeName, displayName);
-        displayNode->SetName(displayNodeName);
-        // add display node to scene
-        this->GetScene()->AddNode(displayNode);
-        displayNode->Modified();
+        vtkMRMLMarkupsNode* markupsNode = vtkMRMLMarkupsNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        // if the model already exists in the scene, apply the display node
+        if (markupsNode)
+        {
+            vtkMRMLMarkupsDisplayNode* currentDisplayNode = markupsNode->GetMarkupsDisplayNode();
+            if (currentDisplayNode)
+            {
+                // create display node and apply attributes
+                vtkMRMLMarkupsDisplayNode* newDisplayNode = vtkMRMLMarkupsDisplayNode::New();
+                newDisplayNode->ReadXMLAttributes(atts);
+                // copy display node attributes to the current display node
+                currentDisplayNode->Copy(newDisplayNode);
+                // set name
+                char displayName[] = "DisplayNode";
+                char* displayNodeName = new char[std::strlen(nodeName) + std::strlen(displayName) + 1];
+                std::strcpy(displayNodeName, nodeName);
+                std::strcat(displayNodeName, displayName);
+                currentDisplayNode->SetName(displayNodeName);
+                currentDisplayNode->Modified();
+                markupsNode->Modified();
+            }
+        }
+        else
+        {
+            vtkMRMLMarkupsDisplayNode* displayNode = vtkMRMLMarkupsDisplayNode::New();
+            // apply attributes
+            displayNode->ReadXMLAttributes(atts);
+            // set name
+            char displayName[] = "DisplayNode";
+            char* displayNodeName = new char[std::strlen(nodeName) + std::strlen(displayName) + 1];
+            std::strcpy(displayNodeName, nodeName);
+            std::strcat(displayNodeName, displayName);
+            displayNode->SetName(displayNodeName);
+            // add display node to scene
+            this->GetScene()->AddNode(displayNode);
+            displayNode->Modified();
+        }
     }
+    
 }
 
 

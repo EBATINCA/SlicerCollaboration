@@ -25,6 +25,9 @@
 // Slicer includes
 #include "qSlicerAbstractModuleWidget.h"
 
+// MRML includes
+#include "vtkMRMLTextNode.h"
+
 #include "qSlicerCollaborationModuleExport.h"
 
 class qSlicerCollaborationModuleWidgetPrivate;
@@ -56,6 +59,7 @@ protected slots:
   void synchronizeSelectedNodes();
   void unsynchronizeSelectedNodes();
   void sendNodesForSynchronization();
+  vtkMRMLTextNode* createTextOfDisplayNode(vtkMRMLNode* displayNode,char* nodeName, char* className);
 
 protected:
   QScopedPointer<qSlicerCollaborationModuleWidgetPrivate> d_ptr;

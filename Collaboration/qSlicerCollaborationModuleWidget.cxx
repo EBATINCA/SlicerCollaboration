@@ -332,28 +332,10 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                     {
                         vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(selectedNode);
                         // get the display node
-                        vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::SafeDownCast(modelNode->GetDisplayNode());
-                        // create a text node
-                        vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLTextNode"));
-                        // hide from Data module
-                        textNode->SetHideFromEditors(1);
-                        this->mrmlScene()->AddNode(textNode);
-                        // write an XML text with the display node attributes
-                        std::stringstream ss;
-                        ss << "<MRMLNode ClassName = \"vtkMRMLModelDisplayNode\" ModelName = \"";
-                        ss << modelNode->GetName();
-                        ss << "\"";
-                        displayNode->WriteXML(ss, 0);
-                        ss << " />";
-                        // add the XML to the text node
-                        textNode->SetText(ss.str());
-                        // Set the same name as the model node + Text
-                        char* modelNodeName = modelNode->GetName();
-                        char textName[] = "Text";
-                        char* textNodeName = new char[std::strlen(modelNodeName) + std::strlen(textName) + 1];
-                        std::strcpy(textNodeName, modelNodeName);
-                        std::strcat(textNodeName, textName);
-                        textNode->SetName(textNodeName);
+                        vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(modelNode->GetDisplayNode());
+                        char* displayClassName = "vtkMRMLModelDisplayNode";
+                        // create a text node with the display information
+                        vtkMRMLTextNode* textNode = createTextOfDisplayNode(displayNode, modelNode->GetName(), displayClassName);
                         // set attribute of the collaboration node to the selected node
                         textNode->SetAttribute(selected_collab_node, "true");
                         // add node reference to the collaboration node
@@ -418,6 +400,20 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         // add as output node of the connector node
                         textNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
                         connectorNode->RegisterOutgoingMRMLNode(textNode);
+
+                        // CREATE DISPLAY NODE
+                        // get the display node
+                        vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
+                        char* displayClassName = "vtkMRMLMarkupsDisplayNode";
+                        // create a text node with the display information
+                        vtkMRMLTextNode* textNodeDisplay = createTextOfDisplayNode(displayNode, markupsNode->GetName(), displayClassName);
+                        // set attribute of the collaboration node to the selected node
+                        textNodeDisplay->SetAttribute(selected_collab_node, "true");
+                        // add node reference to the collaboration node
+                        collabNode->AddCollaborationSynchronizedNodeID(textNodeDisplay->GetID());
+                        // add as output node of the connector node
+                        textNodeDisplay->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
+                        connectorNode->RegisterOutgoingMRMLNode(textNodeDisplay);
                     }
                     // update tree visibility
                     d->SynchronizedTreeView->model()->invalidateFilter();
@@ -521,4 +517,31 @@ void qSlicerCollaborationModuleWidget::sendNodesForSynchronization()
             }
         }
     }
+}
+
+vtkMRMLTextNode* qSlicerCollaborationModuleWidget::createTextOfDisplayNode(vtkMRMLNode* displayNode, char* nodeName, char* className)
+{
+    // create a text node
+    vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLTextNode"));
+    // hide from Data module
+    textNode->SetHideFromEditors(1);
+    this->mrmlScene()->AddNode(textNode);
+    // write an XML text with the display node attributes
+    std::stringstream ss;
+    ss << "<MRMLNode SuperclassName = \"vtkMRMLDisplayNode\" ClassName = \"";
+    ss << className;
+    ss << "\" NodeName = \"";
+    ss << nodeName;
+    ss << "\"";
+    displayNode->WriteXML(ss, 0);
+    ss << " />";
+    // add the XML to the text node
+    textNode->SetText(ss.str());
+    // Set the same name as the model node + Text
+    char textName[] = "DisplayText";
+    char* textNodeName = new char[std::strlen(nodeName) + std::strlen(textName) + 1];
+    std::strcpy(textNodeName, nodeName);
+    std::strcat(textNodeName, textName);
+    textNode->SetName(textNodeName);
+    return textNode;
 }
