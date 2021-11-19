@@ -25,6 +25,9 @@
 // OpenIGTLink includes
 #include "vtkMRMLIGTLConnectorNode.h"
 
+// std includes
+#include <vtkXMLDataElement.h>
+
 // Collaboration includes
 #include "vtkSlicerCollaborationModuleMRMLExport.h"
 
@@ -61,6 +64,8 @@ protected:
   unsigned int AssignOutGoingNodeToDevice(vtkMRMLNode* node, igtlioDevicePointer device) override;
   vtkMRMLNode* CreateNewMRMLNodeForDevice(igtlioDevice* device) override;
   void ProcessIncomingDeviceModifiedEvent(vtkObject* caller, unsigned long event, igtlioDevice* modifiedDevice) override;
+  void addMarkupsNode(vtkXMLDataElement* res);
+  void addDisplayNode(vtkXMLDataElement* res);
 };
 
 #endif

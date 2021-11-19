@@ -42,6 +42,9 @@
 #include <igtlioPolyDataDevice.h>
 #include <vtkMRMLMarkupsLineNode.h>
 #include <vtkMRMLMarkupsPlaneNode.h>
+#include <vtkMRMLMarkupsAngleNode.h>
+#include <vtkMRMLMarkupsCurveNode.h>
+#include <vtkMRMLMarkupsClosedCurveNode.h>
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationConnectorNode);
@@ -102,7 +105,6 @@ void vtkMRMLCollaborationConnectorNode::PrintSelf(ostream& os, vtkIndent indent)
 //----------------------------------------------------------------------------
 unsigned int vtkMRMLCollaborationConnectorNode::AssignOutGoingNodeToDevice(vtkMRMLNode* node, igtlioDevicePointer device)
 {
-    std::cout << "AssignOutGoingNodeToDevice" << "\n";
     return Superclass::AssignOutGoingNodeToDevice(node, device);
 }
 
@@ -189,171 +191,12 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
                 // if it is a ModelDisplayNode
                 if (strcmp(res->GetAttribute("ClassName"), "vtkMRMLModelDisplayNode") == 0)
                 {
-                    std::vector<const char*> atts_v;
-                    for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
-                    {
-                        const char* attName = res->GetAttributeName(attributeIndex);
-                        const char* attValue = res->GetAttribute(attName);
-                        atts_v.push_back(attName);
-                        atts_v.push_back(attValue);
-                    }
-                    atts_v.push_back(nullptr);
-                    const char** atts = (atts_v.data());
-                    // get the display node from the corresponding model
-                    const char* modelName = res->GetAttribute("ModelName");
-                    vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(modelName));
-                    // if the model already exists in the scene, apply the display node
-                    if (modelNode)
-                    {
-                        vtkMRMLModelDisplayNode* currentDisplayNode = modelNode->GetModelDisplayNode();
-                        if (currentDisplayNode)
-                        {
-                            // create display node and apply attributes
-                            vtkMRMLModelDisplayNode* newDisplayNode = vtkMRMLModelDisplayNode::New();
-                            newDisplayNode->ReadXMLAttributes(atts);
-                            // copy display node attributes to the current display node
-                            currentDisplayNode->Copy(newDisplayNode);
-                            // set name
-                            char displayName[] = "DisplayNode";
-                            char* displayNodeName = new char[std::strlen(modelName) + std::strlen(displayName) + 1];
-                            std::strcpy(displayNodeName, modelName);
-                            std::strcat(displayNodeName, displayName);
-                            currentDisplayNode->SetName(displayNodeName);
-                            currentDisplayNode->Modified();
-                            modelNode->Modified();
-                        }
-                    }
-                    else
-                    {
-                        vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::New();
-                        // apply attributes
-                        displayNode->ReadXMLAttributes(atts);
-                        // set name
-                        char displayName[] = "DisplayNode";
-                        char* displayNodeName = new char[std::strlen(modelName) + std::strlen(displayName) + 1];
-                        std::strcpy(displayNodeName, modelName);
-                        std::strcat(displayNodeName, displayName);
-                        displayNode->SetName(displayNodeName);
-                        // add display node to scene
-                        this->GetScene()->AddNode(displayNode);
-                        displayNode->Modified();
-                    }
+                    addDisplayNode(res);
                 }
-                // if it is a plane markups node
-                else if (strcmp(res->GetAttribute("ClassName"), "vtkMRMLMarkupsPlaneNode") == 0)
+                // if it is a markups (non fiducial) node
+                else if (strcmp(res->GetAttribute("SuperclassName"), "vtkMRMLMarkupsNode") == 0)
                 {
-                    std::vector<const char*> atts_v;
-                    for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
-                    {
-                        const char* attName = res->GetAttributeName(attributeIndex);
-                        const char* attValue = res->GetAttribute(attName);
-                        atts_v.push_back(attName);
-                        atts_v.push_back(attValue);
-                    }
-                    atts_v.push_back(nullptr);
-                    const char** atts = (atts_v.data());
-                    vtkMRMLMarkupsPlaneNode* planeNode = vtkMRMLMarkupsPlaneNode::New();
-                    // apply attributes
-                    planeNode->ReadXMLAttributes(atts);
-
-                    // get control points attribute
-                    std::string controlPointsStr = res->GetAttribute("ControlPoints");
-                    // get every control point, separated by ;
-                    std::vector<std::string> vectControlPoints;
-                    std::stringstream ss2(controlPointsStr);
-                    while (ss2.good())
-                    {
-                        std::string substr;
-                        getline(ss2, substr, ';');
-                        vectControlPoints.push_back(substr);
-                    }
-                    for (int controlPointIndex = 0; controlPointIndex < vectControlPoints.size(); controlPointIndex++)
-                    {
-                        // get string of control point
-                        std::string token = vectControlPoints[controlPointIndex];
-                        // remove brackets
-                        std::string brackets = "[]";
-                        for (char c : brackets) {
-                            token.erase(std::remove(token.begin(), token.end(), c), token.end());
-                        }
-                        // get every coordinate
-                        std::stringstream ss(token);
-                        std::vector<std::string> vect;
-                        while (ss.good())
-                        {
-                            std::string substr;
-                            getline(ss, substr, ',');
-                            vect.push_back(substr);
-                        }
-                        // add control point to line node
-                        vtkMRMLMarkupsNode::ControlPoint* newControlPoint = new vtkMRMLMarkupsNode::ControlPoint;
-                        newControlPoint->Position[0] = atof(vect[0].c_str());
-                        newControlPoint->Position[1] = atof(vect[1].c_str());
-                        newControlPoint->Position[2] = atof(vect[2].c_str());
-                        planeNode->AddControlPoint(newControlPoint, true);
-                        newControlPoint->PositionStatus = true;
-                    }
-                    // add node to scene
-                    this->GetScene()->AddNode(planeNode);
-                    planeNode->UpdateAllMeasurements();
-                }
-                // if it is a line markups node
-                else if (strcmp(res->GetAttribute("ClassName"), "vtkMRMLMarkupsLineNode") == 0)
-                {
-                std::vector<const char*> atts_v;
-                for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
-                {
-                    const char* attName = res->GetAttributeName(attributeIndex);
-                    const char* attValue = res->GetAttribute(attName);
-                    atts_v.push_back(attName);
-                    atts_v.push_back(attValue);
-                }
-                atts_v.push_back(nullptr);
-                const char** atts = (atts_v.data());
-                vtkMRMLMarkupsLineNode* lineNode = vtkMRMLMarkupsLineNode::New();
-                // apply attributes
-                lineNode->ReadXMLAttributes(atts);
-
-                // get control points attribute
-                std::string controlPointsStr = res->GetAttribute("ControlPoints");
-                // get every control point, separated by ;
-                std::vector<std::string> vectControlPoints;
-                std::stringstream ss2(controlPointsStr);
-                while (ss2.good())
-                {
-                    std::string substr;
-                    getline(ss2, substr, ';');
-                    vectControlPoints.push_back(substr);
-                }
-                for (int controlPointIndex = 0; controlPointIndex < vectControlPoints.size(); controlPointIndex++)
-                {
-                    // get string of control point
-                    std::string token = vectControlPoints[controlPointIndex];
-                    // remove brackets
-                    std::string brackets = "[]";
-                    for (char c : brackets) {
-                        token.erase(std::remove(token.begin(), token.end(), c), token.end());
-                    }
-                    // get every coordinate
-                    std::stringstream ss(token);
-                    std::vector<std::string> vect;
-                    while (ss.good())
-                    {
-                        std::string substr;
-                        getline(ss, substr, ',');
-                        vect.push_back(substr);
-                    }
-                    // add control point to line node
-                    vtkMRMLMarkupsNode::ControlPoint* newControlPoint = new vtkMRMLMarkupsNode::ControlPoint;
-                    newControlPoint->Position[0] = atof(vect[0].c_str());
-                    newControlPoint->Position[1] = atof(vect[1].c_str());
-                    newControlPoint->Position[2] = atof(vect[2].c_str());
-                    lineNode->AddControlPoint(newControlPoint, true);
-                    newControlPoint->PositionStatus = true;
-                }
-                // add node to scene
-                this->GetScene()->AddNode(lineNode);
-                lineNode->UpdateAllMeasurements();
+                    addMarkupsNode(res);
                 }
             }
             else
@@ -390,5 +233,186 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
     Superclass::ProcessIncomingDeviceModifiedEvent(caller, event, modifiedDevice);
 }
 
+void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
+{
+    // read attributes
+    int numberOfAttributes = res->GetNumberOfAttributes();
+    std::vector<const char*> atts_v;
+    for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
+    {
+        const char* attName = res->GetAttributeName(attributeIndex);
+        const char* attValue = res->GetAttribute(attName);
+        atts_v.push_back(attName);
+        atts_v.push_back(attValue);
+    }
+    atts_v.push_back(nullptr);
+    const char** atts = (atts_v.data());
+    
+    // get control points attribute
+    std::string controlPointsStr = res->GetAttribute("ControlPoints");
+
+    // get every control point, separated by ;
+    std::vector<std::string> vectControlPoints;
+    std::stringstream ss2(controlPointsStr);
+    while (ss2.good())
+    {
+        std::string substr;
+        getline(ss2, substr, ';');
+        vectControlPoints.push_back(substr);
+    }
+    std::vector<vtkMRMLMarkupsNode::ControlPoint*> ControlPointsList;
+    for (int controlPointIndex = 0; controlPointIndex < vectControlPoints.size(); controlPointIndex++)
+    {
+        // get string of control point
+        std::string token = vectControlPoints[controlPointIndex];
+        // remove brackets
+        std::string brackets = "[]";
+        for (char c : brackets) {
+            token.erase(std::remove(token.begin(), token.end(), c), token.end());
+        }
+        // get every coordinate
+        std::stringstream ss(token);
+        std::vector<std::string> vect;
+        while (ss.good())
+        {
+            std::string substr;
+            getline(ss, substr, ',');
+            vect.push_back(substr);
+        }
+        // add control point to list
+        vtkMRMLMarkupsNode::ControlPoint* newControlPoint = new vtkMRMLMarkupsNode::ControlPoint;
+        newControlPoint->Position[0] = atof(vect[0].c_str());
+        newControlPoint->Position[1] = atof(vect[1].c_str());
+        newControlPoint->Position[2] = atof(vect[2].c_str());
+        newControlPoint->PositionStatus = true;
+        ControlPointsList.push_back(newControlPoint);
+    }
+    // add node to scene
+        std::string className = res->GetAttribute("ClassName");
+    if (className == "vtkMRMLMarkupsLineNode")
+    {
+        vtkMRMLMarkupsLineNode* markupsNodeFinal = vtkMRMLMarkupsLineNode::New();
+        // apply attributes
+        markupsNodeFinal->ReadXMLAttributes(atts);
+        // apply control points
+        int numberOfControlPoints = ControlPointsList.size();
+        for (int cp = 0; cp < numberOfControlPoints; cp++)
+        {
+            markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
+        }
+        this->GetScene()->AddNode(markupsNodeFinal);
+        markupsNodeFinal->UpdateAllMeasurements();
+    }
+    else if (className == "vtkMRMLMarkupsPlaneNode")
+    {
+        vtkMRMLMarkupsPlaneNode* markupsNodeFinal = vtkMRMLMarkupsPlaneNode::New();
+        // apply attributes
+        markupsNodeFinal->ReadXMLAttributes(atts);
+        // apply control points
+        int numberOfControlPoints = ControlPointsList.size();
+        for (int cp = 0; cp < numberOfControlPoints; cp++)
+        {
+            markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
+        }
+        this->GetScene()->AddNode(markupsNodeFinal);
+        markupsNodeFinal->UpdateAllMeasurements();
+    }
+    else if (className == "vtkMRMLMarkupsAngleNode")
+    {
+        vtkMRMLMarkupsAngleNode* markupsNodeFinal = vtkMRMLMarkupsAngleNode::New();
+        // apply attributes
+        markupsNodeFinal->ReadXMLAttributes(atts);
+        // apply control points
+        int numberOfControlPoints = ControlPointsList.size();
+        for (int cp = 0; cp < numberOfControlPoints; cp++)
+        {
+            markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
+        }
+        this->GetScene()->AddNode(markupsNodeFinal);
+        markupsNodeFinal->UpdateAllMeasurements();
+    }
+    else if (className == "vtkMRMLMarkupsCurveNode")
+    {
+        vtkMRMLMarkupsCurveNode* markupsNodeFinal = vtkMRMLMarkupsCurveNode::New();
+        // apply attributes
+        markupsNodeFinal->ReadXMLAttributes(atts);
+        // apply control points
+        int numberOfControlPoints = ControlPointsList.size();
+        for (int cp = 0; cp < numberOfControlPoints; cp++)
+        {
+            markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
+        }
+        this->GetScene()->AddNode(markupsNodeFinal);
+        markupsNodeFinal->UpdateAllMeasurements();
+    }
+    else if (className == "vtkMRMLMarkupsClosedCurveNode")
+    {
+        vtkMRMLMarkupsClosedCurveNode* markupsNodeFinal = vtkMRMLMarkupsClosedCurveNode::New();
+        // apply attributes
+        markupsNodeFinal->ReadXMLAttributes(atts);
+        // apply control points
+        int numberOfControlPoints = ControlPointsList.size();
+        for (int cp = 0; cp < numberOfControlPoints; cp++)
+        {
+            markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
+        }
+        this->GetScene()->AddNode(markupsNodeFinal);
+        markupsNodeFinal->UpdateAllMeasurements();
+    }
+}
+
+void vtkMRMLCollaborationConnectorNode::addDisplayNode(vtkXMLDataElement* res)
+{
+    std::vector<const char*> atts_v;
+    int numberOfAttributes = res->GetNumberOfAttributes();
+    for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
+    {
+        const char* attName = res->GetAttributeName(attributeIndex);
+        const char* attValue = res->GetAttribute(attName);
+        atts_v.push_back(attName);
+        atts_v.push_back(attValue);
+    }
+    atts_v.push_back(nullptr);
+    const char** atts = (atts_v.data());
+    // get the display node from the corresponding model
+    const char* modelName = res->GetAttribute("ModelName");
+    vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(modelName));
+    // if the model already exists in the scene, apply the display node
+    if (modelNode)
+    {
+        vtkMRMLModelDisplayNode* currentDisplayNode = modelNode->GetModelDisplayNode();
+        if (currentDisplayNode)
+        {
+            // create display node and apply attributes
+            vtkMRMLModelDisplayNode* newDisplayNode = vtkMRMLModelDisplayNode::New();
+            newDisplayNode->ReadXMLAttributes(atts);
+            // copy display node attributes to the current display node
+            currentDisplayNode->Copy(newDisplayNode);
+            // set name
+            char displayName[] = "DisplayNode";
+            char* displayNodeName = new char[std::strlen(modelName) + std::strlen(displayName) + 1];
+            std::strcpy(displayNodeName, modelName);
+            std::strcat(displayNodeName, displayName);
+            currentDisplayNode->SetName(displayNodeName);
+            currentDisplayNode->Modified();
+            modelNode->Modified();
+        }
+    }
+    else
+    {
+        vtkMRMLModelDisplayNode* displayNode = vtkMRMLModelDisplayNode::New();
+        // apply attributes
+        displayNode->ReadXMLAttributes(atts);
+        // set name
+        char displayName[] = "DisplayNode";
+        char* displayNodeName = new char[std::strlen(modelName) + std::strlen(displayName) + 1];
+        std::strcpy(displayNodeName, modelName);
+        std::strcat(displayNodeName, displayName);
+        displayNode->SetName(displayNodeName);
+        // add display node to scene
+        this->GetScene()->AddNode(displayNode);
+        displayNode->Modified();
+    }
+}
 
 
