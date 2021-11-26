@@ -45,6 +45,7 @@
 #include <vtkMRMLMarkupsAngleNode.h>
 #include <vtkMRMLMarkupsCurveNode.h>
 #include <vtkMRMLMarkupsClosedCurveNode.h>
+#include <vtkMRMLMarkupsROINode.h>
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationConnectorNode);
@@ -413,6 +414,54 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
         {
             markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
         }
+        this->GetScene()->AddNode(markupsNodeFinal);
+        markupsNodeFinal->UpdateAllMeasurements();
+    }
+    else if (className == "vtkMRMLMarkupsROINode")
+    {
+        vtkMRMLMarkupsROINode* markupsNodeFinal;
+        if (nodeExists)
+        {
+            markupsNodeFinal = vtkMRMLMarkupsROINode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        }
+        else
+        {
+            markupsNodeFinal = vtkMRMLMarkupsROINode::New();
+        }
+
+        // get ROI radius attribute
+        std::string ROIRadiusStr = res->GetAttribute("ROIRadius");
+        // remove brackets
+        std::string brackets = "[]";
+        for (char c : brackets) {
+            ROIRadiusStr.erase(std::remove(ROIRadiusStr.begin(), ROIRadiusStr.end(), c), ROIRadiusStr.end());
+        }
+        // get every coordinate
+        std::stringstream ss(ROIRadiusStr);
+        std::vector<std::string> vect;
+        while (ss.good())
+        {
+            std::string substr;
+            getline(ss, substr, ',');
+            vect.push_back(substr);
+        }
+        // apply attributes
+        markupsNodeFinal->ReadXMLAttributes(atts);
+        // apply control points
+        int numberOfControlPoints = ControlPointsList.size();
+        markupsNodeFinal->RemoveAllControlPoints();
+        for (int cp = 0; cp < numberOfControlPoints; cp++)
+        {
+            markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
+        }
+
+        // apply ROI radius
+        double ROIrad[3];
+        ROIrad[0] = std::stod(vect[0].c_str());
+        ROIrad[1] = std::stod(vect[1].c_str());
+        ROIrad[2] = std::stod(vect[2].c_str());
+        markupsNodeFinal->SetRadiusXYZ(ROIrad);
+
         this->GetScene()->AddNode(markupsNodeFinal);
         markupsNodeFinal->UpdateAllMeasurements();
     }

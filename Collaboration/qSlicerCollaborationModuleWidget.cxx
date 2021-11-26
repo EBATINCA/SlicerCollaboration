@@ -47,6 +47,7 @@
 #include <vtkMRMLMarkupsCurveNode.h>
 #include <vtkMRMLMarkupsClosedCurveNode.h>
 #include <vtkXMLUtilities.h>
+#include <vtkMRMLMarkupsROINode.h>
 
 
 //-----------------------------------------------------------------------------
@@ -328,12 +329,10 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                     selectedNode->SetAttribute(selected_collab_node, "true");
                     // add node reference to the collaboration node
                     collabNode->AddCollaborationSynchronizedNodeID(selectedNode->GetID());
-                    // add as output node of the connector node
-                    connectorNode->RegisterOutgoingMRMLNode(selectedNode);
                     selectedNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
-                    if (selectedNode->IsA("vtkMRMLMarkupsNode") && !selectedNode->IsA("vtkMRMLMarkupsFiducialNode")) {}
-                    else
-                    {
+                    if (!selectedNode->IsA("vtkMRMLMarkupsNode") || selectedNode->IsA("vtkMRMLMarkupsFiducialNode")) {
+                        // add as output node of the connector node
+                        connectorNode->RegisterOutgoingMRMLNode(selectedNode);
                         connectorNode->PushNode(selectedNode);
                     }
                     // check if it is a model node
@@ -387,6 +386,7 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                             }
                         }
                         controlPointsText.append("\"");
+
                         // create a text node
                         vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLTextNode"));
                         // hide from Data module
@@ -398,6 +398,25 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         ss << className;
                         ss << "\" ";
                         ss << controlPointsText;
+
+                        // check if it is a ROI markups node to get ROI radius
+                        if (selectedNode->IsA("vtkMRMLMarkupsROINode"))
+                        {
+                            vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(selectedNode);
+                            double rad[3];
+                            markupsROINode->GetRadiusXYZ(rad);
+                            std::string ROIradiusText = " ROIRadius = \"";
+                            ROIradiusText.append("[");
+                            ROIradiusText.append(std::to_string(rad[0]));
+                            ROIradiusText.append(",");
+                            ROIradiusText.append(std::to_string(rad[1]));
+                            ROIradiusText.append(",");
+                            ROIradiusText.append(std::to_string(rad[2]));
+                            ROIradiusText.append("]");
+                            ROIradiusText.append("\"");
+                            ss << ROIradiusText;
+                        }
+                        
                         markupsNode->WriteXML(ss, 0);
                         ss << " />";
                         // add the XML to the text node
@@ -421,7 +440,6 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         markupsNode->AddNodeReferenceID("TextNode", textNode->GetID());
                         // add observer to the markups node to update the text node
                         markupsNode->AddObserver(vtkCommand::AnyEvent, updateTextCallback);
-                        // CREATE DISPLAY NODE
                         // get the display node
                         vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
                         char* displayClassName = "vtkMRMLMarkupsDisplayNode";
@@ -617,12 +635,6 @@ vtkMRMLTextNode* qSlicerCollaborationModuleWidget::createTextOfDisplayNode(vtkMR
 void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned long event, void* clientData, void* callData)
 {
     qSlicerCollaborationModuleWidget* self = reinterpret_cast<qSlicerCollaborationModuleWidget*>(clientData);
-    vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(caller);
-    vtkMRMLMarkupsNode* markupsNode = vtkMRMLMarkupsNode::SafeDownCast(caller);
-    if (caller->IsA("vtkMRMLMarkupsNode"))
-    {
-        int a = 0;
-    }
     
     // Get the selected collaboration node
     if (self->logic() == nullptr)
@@ -637,17 +649,18 @@ void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned l
             // Get the connector node associated to the collaboration node
             vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(self->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
             if (connectorNode) {
-                if (displayNode)
+                if (caller->IsA("vtkMRMLDisplayNode"))
                 {
+                    vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(caller);
                     // get the corresponding text node
                     const char* textNodeID = displayNode->GetNthNodeReferenceID("TextNode", 0);
                     vtkMRMLTextNode* displayTextNode = vtkMRMLTextNode::SafeDownCast(self->mrmlScene()->GetNodeByID(textNodeID));
                     if (displayTextNode) {
-                        std::string className = displayNode->GetClassName();
+                        // std::string className = displayNode->GetClassName();
                         char* modelDisplayClass = "vtkMRMLModelDisplayNode";
                         char* markupsDisplayClass = "vtkMRMLMarkupsDisplayNode";
                         // if it is a model display node
-                        if (strcmp(className.c_str(), "vtkMRMLModelDisplayNode") == 0)
+                        if (displayNode->IsA("vtkMRMLModelDisplayNode"))
                         {
                             // create a text node with the display information
                             vtkMRMLTextNode* textNode = self->createTextOfDisplayNode(displayNode, displayNode->GetDisplayableNode()->GetName(), modelDisplayClass);
@@ -657,7 +670,7 @@ void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned l
                             connectorNode->PushNode(displayTextNode);
                         }
                         // if it is a markups display node
-                        else if (strcmp(className.c_str(), "vtkMRMLMarkupsDisplayNode") == 0)
+                        else if (displayNode->IsA("vtkMRMLMarkupsDisplayNode"))
                         {
                             // create a text node with the display information
                             vtkMRMLTextNode* textNode = self->createTextOfDisplayNode(displayNode, displayNode->GetDisplayableNode()->GetName(), markupsDisplayClass);
@@ -712,8 +725,9 @@ void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned l
                         }
                     }
                 }
-                else if (markupsNode)
+                else if (caller->IsA("vtkMRMLMarkupsNode"))
                 {
+                    vtkMRMLMarkupsNode* markupsNode = vtkMRMLMarkupsNode::SafeDownCast(caller);
                     std::string className = markupsNode->GetClassName();
                     // get control points
                     vtkNew<vtkPoints> controlPoints;
@@ -738,7 +752,6 @@ void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned l
                     }
                     controlPointsText.append("\"");
                     // get the text node
-                    //qSlicerCollaborationModuleWidget* self2 = reinterpret_cast<qSlicerCollaborationModuleWidget*>(clientData);
                     const char* textNodeID = markupsNode->GetNthNodeReferenceID("TextNode", 0);
                     vtkMRMLTextNode* textNode2 = vtkMRMLTextNode::SafeDownCast(self->mrmlScene()->GetNodeByID(textNodeID));
                     if (textNode2) {
@@ -748,6 +761,23 @@ void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned l
                         ss << className;
                         ss << "\" ";
                         ss << controlPointsText;
+                        // check if it is a ROI markups node to get ROI radius
+                        if (markupsNode->IsA("vtkMRMLMarkupsROINode"))
+                        {
+                            vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(markupsNode);
+                            double rad[3];
+                            markupsROINode->GetRadiusXYZ(rad);
+                            std::string ROIradiusText = " ROIRadius = \"";
+                            ROIradiusText.append("[");
+                            ROIradiusText.append(std::to_string(rad[0]));
+                            ROIradiusText.append(",");
+                            ROIradiusText.append(std::to_string(rad[1]));
+                            ROIradiusText.append(",");
+                            ROIradiusText.append(std::to_string(rad[2]));
+                            ROIradiusText.append("]");
+                            ROIradiusText.append("\"");
+                            ss << ROIradiusText;
+                        }
                         markupsNode->WriteXML(ss, 0);
                         ss << " />";
                         // add the XML to the text node

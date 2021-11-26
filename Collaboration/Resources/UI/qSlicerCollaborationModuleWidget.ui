@@ -154,15 +154,10 @@
           <property name="nodeTypes">
            <stringlist>
             <string>vtkMRMLModelNode</string>
-            <string>vtkMRMLMarkupsFiducialNode</string>
             <string>vtkMRMLLinearTransformNode</string>
             <string>vtkMRMLTextNode</string>
             <string>vtkMRMLScalarVolumeNode</string>
-            <string>vtkMRMLMarkupsLineNode</string>
-            <string>vtkMRMLMarkupsPlaneNode</string>
-            <string>vtkMRMLMarkupsAngleNode</string>
-            <string>vtkMRMLMarkupsCurveNode</string>
-            <string>vtkMRMLMarkupsClosedCurveNode</string>
+            <string>vtkMRMLMarkupsNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
@@ -217,14 +212,9 @@
            <stringlist>
             <string>vtkMRMLModelNode</string>
             <string>vtkMRMLLinearTransformNode</string>
-            <string>vtkMRMLMarkupsFiducialNode</string>
             <string>vtkMRMLTextNode</string>
             <string>vtkMRMLScalarVolumeNode</string>
-            <string>vtkMRMLMarkupsLineNode</string>
-            <string>vtkMRMLMarkupsPlaneNode</string>
-            <string>vtkMRMLMarkupsAngleNode</string>
-            <string>vtkMRMLMarkupsCurveNode</string>
-            <string>vtkMRMLMarkupsClosedCurveNode</string>
+            <string>vtkMRMLMarkupsNode</string>
            </stringlist>
           </property>
           <property name="visibilityColumnVisible">
