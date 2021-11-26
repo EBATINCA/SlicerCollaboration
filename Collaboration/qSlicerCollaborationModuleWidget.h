@@ -45,6 +45,7 @@ public:
   qSlicerCollaborationModuleWidget(QWidget *parent=0);
   virtual ~qSlicerCollaborationModuleWidget();
   const char* selected_collab_node;
+  vtkCallbackCommand* updateTextCallback;
 
 public slots:
   /// Update widget GUI from collaboration node
@@ -63,6 +64,7 @@ protected slots:
 
 protected:
   QScopedPointer<qSlicerCollaborationModuleWidgetPrivate> d_ptr;
+  static void nodeUpdated(vtkObject* caller, unsigned long event, void* clientData, void* callData);
 
   virtual void setup();
 

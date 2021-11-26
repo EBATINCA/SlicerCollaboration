@@ -46,6 +46,7 @@
 #include <vtkMRMLMarkupsAngleNode.h>
 #include <vtkMRMLMarkupsCurveNode.h>
 #include <vtkMRMLMarkupsClosedCurveNode.h>
+#include <vtkXMLUtilities.h>
 
 
 //-----------------------------------------------------------------------------
@@ -119,8 +120,11 @@ void qSlicerCollaborationModuleWidget::setup()
   // exclude the nodes selected for synchronization
   d->AvailableNodesTreeView->addNodeAttributeFilter(selected_collab_node, "true", false);
   d->AvailableNodesTreeView->model()->invalidateFilter();
-  
 
+  // create callback to update text nodes when markups or display nodes are updated
+  this->updateTextCallback = vtkCallbackCommand::New();
+  this->updateTextCallback->SetClientData(reinterpret_cast<void*>(this));
+  this->updateTextCallback->SetCallback(qSlicerCollaborationModuleWidget::nodeUpdated);
 }
 
 void qSlicerCollaborationModuleWidget::setCollaborationNode(vtkMRMLNode* node)
@@ -327,6 +331,11 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                     // add as output node of the connector node
                     connectorNode->RegisterOutgoingMRMLNode(selectedNode);
                     selectedNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
+                    if (selectedNode->IsA("vtkMRMLMarkupsNode") && !selectedNode->IsA("vtkMRMLMarkupsFiducialNode")) {}
+                    else
+                    {
+                        connectorNode->PushNode(selectedNode);
+                    }
                     // check if it is a model node
                     if (selectedNode->IsA("vtkMRMLModelNode"))
                     {
@@ -343,6 +352,13 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         // add as output node of the connector node
                         textNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
                         connectorNode->RegisterOutgoingMRMLNode(textNode);
+                        // send if the connection is active
+                        connectorNode->PushNode(textNode);
+                        // add node reference to the display model node
+                        displayNode->AddNodeReferenceRole("TextNode");
+                        displayNode->AddNodeReferenceID("TextNode", textNode->GetID());
+                        // add observer to the display node to update the text node
+                        displayNode->AddObserver(vtkCommand::ModifiedEvent, updateTextCallback);
                     }
                     // check if it is a line markups (non fiducial) node
                     else if (selectedNode->IsA("vtkMRMLMarkupsNode") && !selectedNode->IsA("vtkMRMLMarkupsFiducialNode"))
@@ -400,7 +416,11 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         // add as output node of the connector node
                         textNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
                         connectorNode->RegisterOutgoingMRMLNode(textNode);
-
+                        // add node reference to the markups node
+                        markupsNode->AddNodeReferenceRole("TextNode");
+                        markupsNode->AddNodeReferenceID("TextNode", textNode->GetID());
+                        // add observer to the markups node to update the text node
+                        markupsNode->AddObserver(vtkCommand::AnyEvent, updateTextCallback);
                         // CREATE DISPLAY NODE
                         // get the display node
                         vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
@@ -414,6 +434,14 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         // add as output node of the connector node
                         textNodeDisplay->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
                         connectorNode->RegisterOutgoingMRMLNode(textNodeDisplay);
+                        // add node reference to the display markups node
+                        displayNode->AddNodeReferenceRole("TextNode");
+                        displayNode->AddNodeReferenceID("TextNode", textNodeDisplay->GetID());
+                        // add observer to the markups node to update the text node
+                        displayNode->AddObserver(vtkCommand::ModifiedEvent, updateTextCallback);
+                        // send node
+                        connectorNode->PushNode(textNode);
+                        connectorNode->PushNode(textNodeDisplay);
                     }
                     // update tree visibility
                     d->SynchronizedTreeView->model()->invalidateFilter();
@@ -453,20 +481,14 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                     if (att_push) {
                         selectedNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
                     }
-                    // check if it is a model node
-                    vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(selectedNode);
-                    if (modelNode)
+                    // check if it is a model node, to remove the corresponding text node
+                    if (selectedNode->IsA("vtkMRMLModelNode"))
                     {
-                        // Get the name of the text node storing the display node information
-                        char* modelNodeName = modelNode->GetName();
-                        char textName[] = "Text";
-                        char* textNodeName = new char[std::strlen(modelNodeName) + std::strlen(textName) + 1];
-                        std::strcpy(textNodeName, modelNodeName);
-                        std::strcat(textNodeName, textName);
+                        vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(selectedNode);
                         // Get the text node
-                        // vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetFirstNodeByName(textNodeName));
+                        const char* textNodeID = modelNode->GetDisplayNode()->GetNthNodeReferenceID("TextNode", 0);
                         vtkSmartPointer<vtkMRMLTextNode> textNode =
-                            vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetFirstNode(textNodeName, "vtkMRMLTextNode"));
+                            vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetNodeByID(textNodeID));
                         if (textNode)
                         {
                             // remove the attribute of the collaboration node from the selected node
@@ -480,7 +502,53 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                             }
                             connectorNode->UnregisterOutgoingMRMLNode(textNode);
                             // remove from scene
+                            textNode->RemoveAllObservers();
                             this->mrmlScene()->RemoveNode(textNode);
+                        }
+                    }
+                    // check if it is a markups node, to remove the corresponding text nodes
+                    if (selectedNode->IsA("vtkMRMLMarkupsNode"))
+                    {
+                        vtkMRMLMarkupsNode* markupsNode = vtkMRMLMarkupsNode::SafeDownCast(selectedNode);
+                        // Get the corresponding text node
+                        const char* textNodeID = markupsNode->GetNthNodeReferenceID("TextNode", 0);
+                        vtkSmartPointer<vtkMRMLTextNode> textNode =
+                            vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetNodeByID(textNodeID));
+                        if (textNode)
+                        {
+                            // remove the attribute of the collaboration node from the selected node
+                            textNode->RemoveAttribute(selected_collab_node);
+                            // remove node reference from the collaboration node
+                            collabNode->RemoveCollaborationSynchronizedNodeID(textNode->GetID());
+                            // remove as output node of the connector node
+                            const char* att_push_text = selectedNode->GetAttribute("OpenIGTLinkIF.pushOnConnect");
+                            if (att_push_text) {
+                                textNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                            }
+                            connectorNode->UnregisterOutgoingMRMLNode(textNode);
+                            // remove from scene
+                            textNode->RemoveAllObservers();
+                            this->mrmlScene()->RemoveNode(textNode);
+                        }
+                        // get the display node and its corresponding text node
+                        const char* displayTextNodeID = markupsNode->GetDisplayNode()->GetNthNodeReferenceID("TextNode", 0);
+                        vtkSmartPointer<vtkMRMLTextNode> displayTextNode =
+                            vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetNodeByID(displayTextNodeID));
+                        if (displayTextNode)
+                        {
+                            // remove the attribute of the collaboration node from the selected node
+                            displayTextNode->RemoveAttribute(selected_collab_node);
+                            // remove node reference from the collaboration node
+                            collabNode->RemoveCollaborationSynchronizedNodeID(displayTextNode->GetID());
+                            // remove as output node of the connector node
+                            const char* att_push_text = selectedNode->GetAttribute("OpenIGTLinkIF.pushOnConnect");
+                            if (att_push_text) {
+                                displayTextNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                            }
+                            connectorNode->UnregisterOutgoingMRMLNode(displayTextNode);
+                            // remove from scene
+                            displayTextNode->RemoveAllObservers();
+                            this->mrmlScene()->RemoveNode(displayTextNode);
                         }
                     }
                     // update tree visibility
@@ -544,4 +612,151 @@ vtkMRMLTextNode* qSlicerCollaborationModuleWidget::createTextOfDisplayNode(vtkMR
     std::strcat(textNodeName, textName);
     textNode->SetName(textNodeName);
     return textNode;
+}
+
+void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned long event, void* clientData, void* callData)
+{
+    qSlicerCollaborationModuleWidget* self = reinterpret_cast<qSlicerCollaborationModuleWidget*>(clientData);
+    vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(caller);
+    vtkMRMLMarkupsNode* markupsNode = vtkMRMLMarkupsNode::SafeDownCast(caller);
+    if (caller->IsA("vtkMRMLMarkupsNode"))
+    {
+        int a = 0;
+    }
+    
+    // Get the selected collaboration node
+    if (self->logic() == nullptr)
+    {
+        return;
+    }
+    vtkSlicerCollaborationLogic* collaborationLogic = vtkSlicerCollaborationLogic::SafeDownCast(self->logic());
+    if (collaborationLogic)
+    {
+        vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(collaborationLogic->collaborationNodeSelected);
+        if (collabNode) {
+            // Get the connector node associated to the collaboration node
+            vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(self->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+            if (connectorNode) {
+                if (displayNode)
+                {
+                    // get the corresponding text node
+                    const char* textNodeID = displayNode->GetNthNodeReferenceID("TextNode", 0);
+                    vtkMRMLTextNode* displayTextNode = vtkMRMLTextNode::SafeDownCast(self->mrmlScene()->GetNodeByID(textNodeID));
+                    if (displayTextNode) {
+                        std::string className = displayNode->GetClassName();
+                        char* modelDisplayClass = "vtkMRMLModelDisplayNode";
+                        char* markupsDisplayClass = "vtkMRMLMarkupsDisplayNode";
+                        // if it is a model display node
+                        if (strcmp(className.c_str(), "vtkMRMLModelDisplayNode") == 0)
+                        {
+                            // create a text node with the display information
+                            vtkMRMLTextNode* textNode = self->createTextOfDisplayNode(displayNode, displayNode->GetDisplayableNode()->GetName(), modelDisplayClass);
+                            // set text
+                            displayTextNode->SetText(textNode->GetText());
+                            displayTextNode->Modified();
+                            connectorNode->PushNode(displayTextNode);
+                        }
+                        // if it is a markups display node
+                        else if (strcmp(className.c_str(), "vtkMRMLMarkupsDisplayNode") == 0)
+                        {
+                            // create a text node with the display information
+                            vtkMRMLTextNode* textNode = self->createTextOfDisplayNode(displayNode, displayNode->GetDisplayableNode()->GetName(), markupsDisplayClass);
+                            // set text
+                            displayTextNode->SetText(textNode->GetText());
+                            displayTextNode->Modified();
+                            connectorNode->PushNode(displayTextNode);
+
+                            // update also the markups node text
+                            // get markups node
+                            vtkMRMLMarkupsNode* markupsNode = vtkMRMLMarkupsNode::SafeDownCast(displayNode->GetDisplayableNode());
+                            std::string className = markupsNode->GetClassName();
+                            // get control points
+                            vtkNew<vtkPoints> controlPoints;
+                            markupsNode->GetControlPointPositionsWorld(controlPoints);
+                            int numberOfPoints = markupsNode->GetNumberOfControlPoints();
+                            std::string controlPointsText = " ControlPoints = \"";
+                            for (int p = 0; p < numberOfPoints; p++)
+                            {
+                                double point[3];
+                                controlPoints->GetPoint(p, point);
+                                controlPointsText.append("[");
+                                controlPointsText.append(std::to_string(point[0]));
+                                controlPointsText.append(",");
+                                controlPointsText.append(std::to_string(point[1]));
+                                controlPointsText.append(",");
+                                controlPointsText.append(std::to_string(point[2]));
+                                controlPointsText.append("]");
+                                if (p < (numberOfPoints - 1))
+                                {
+                                    controlPointsText.append(";");
+                                }
+                            }
+                            controlPointsText.append("\"");
+                            // get the text node
+                            const char* textNodeID = markupsNode->GetNthNodeReferenceID("TextNode", 0);
+                            vtkMRMLTextNode* textNode2 = vtkMRMLTextNode::SafeDownCast(self->mrmlScene()->GetNodeByID(textNodeID));
+                            if (textNode2) {
+                                // write an XML text with the display node attributes
+                                std::stringstream ss;
+                                ss << "<MRMLNode SuperclassName = \"vtkMRMLMarkupsNode\" ClassName = \"";
+                                ss << className;
+                                ss << "\" ";
+                                ss << controlPointsText;
+                                markupsNode->WriteXML(ss, 0);
+                                ss << " />";
+                                // add the XML to the text node
+                                textNode2->SetText(ss.str());
+                                textNode2->Modified();
+                                connectorNode->PushNode(textNode2);
+                            }
+                        }
+                    }
+                }
+                else if (markupsNode)
+                {
+                    std::string className = markupsNode->GetClassName();
+                    // get control points
+                    vtkNew<vtkPoints> controlPoints;
+                    markupsNode->GetControlPointPositionsWorld(controlPoints);
+                    int numberOfPoints = markupsNode->GetNumberOfControlPoints();
+                    std::string controlPointsText = " ControlPoints = \"";
+                    for (int p = 0; p < numberOfPoints; p++)
+                    {
+                        double point[3];
+                        controlPoints->GetPoint(p, point);
+                        controlPointsText.append("[");
+                        controlPointsText.append(std::to_string(point[0]));
+                        controlPointsText.append(",");
+                        controlPointsText.append(std::to_string(point[1]));
+                        controlPointsText.append(",");
+                        controlPointsText.append(std::to_string(point[2]));
+                        controlPointsText.append("]");
+                        if (p < (numberOfPoints - 1))
+                        {
+                            controlPointsText.append(";");
+                        }
+                    }
+                    controlPointsText.append("\"");
+                    // get the text node
+                    //qSlicerCollaborationModuleWidget* self2 = reinterpret_cast<qSlicerCollaborationModuleWidget*>(clientData);
+                    const char* textNodeID = markupsNode->GetNthNodeReferenceID("TextNode", 0);
+                    vtkMRMLTextNode* textNode2 = vtkMRMLTextNode::SafeDownCast(self->mrmlScene()->GetNodeByID(textNodeID));
+                    if (textNode2) {
+                        // write an XML text with the display node attributes
+                        std::stringstream ss;
+                        ss << "<MRMLNode SuperclassName = \"vtkMRMLMarkupsNode\" ClassName = \"";
+                        ss << className;
+                        ss << "\" ";
+                        ss << controlPointsText;
+                        markupsNode->WriteXML(ss, 0);
+                        ss << " />";
+                        // add the XML to the text node
+                        textNode2->SetText(ss.str());
+                        textNode2->Modified();
+                        connectorNode->PushNode(textNode2);
+                    }
+                }
+            }
+        }
+    }       
 }
