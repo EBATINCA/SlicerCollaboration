@@ -46,6 +46,7 @@
 #include <vtkMRMLMarkupsCurveNode.h>
 #include <vtkMRMLMarkupsClosedCurveNode.h>
 #include <vtkMRMLMarkupsROINode.h>
+#include <vtkMRMLMarkupsFiducialNode.h>
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationConnectorNode);
@@ -302,7 +303,30 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
     {
         nodeExists = true;
     }
-    if (className == "vtkMRMLMarkupsLineNode")
+    if (className == "vtkMRMLMarkupsFiducialNode")
+    {
+        vtkMRMLMarkupsFiducialNode* markupsNodeFinal;
+        if (nodeExists)
+        {
+            markupsNodeFinal = vtkMRMLMarkupsFiducialNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(nodeName));
+        }
+        else
+        {
+            markupsNodeFinal = vtkMRMLMarkupsFiducialNode::New();
+        }
+        // apply attributes
+        markupsNodeFinal->ReadXMLAttributes(atts);
+        // apply control points
+        int numberOfControlPoints = ControlPointsList.size();
+        markupsNodeFinal->RemoveAllControlPoints();
+        for (int cp = 0; cp < numberOfControlPoints; cp++)
+        {
+            markupsNodeFinal->AddControlPoint(ControlPointsList[cp], true);
+        }
+        this->GetScene()->AddNode(markupsNodeFinal);
+        markupsNodeFinal->UpdateAllMeasurements();
+    }
+    else if (className == "vtkMRMLMarkupsLineNode")
     {
         vtkMRMLMarkupsLineNode* markupsNodeFinal;
         if (nodeExists)

@@ -133,6 +133,18 @@ void vtkSlicerCollaborationLogic
         node->IsA("vtkMRMLMarkupsNode") || node->IsA("vtkMRMLTextNode") ||
         node->IsA("vtkMRMLScalarVolumeNode"))
     {
+        // fiducials do not include the description of "Received by OpenIGTLink"
+        if (node->IsA("vtkMRMLMarkupsFiducialNode"))
+        {
+            this->collaborationNodeSelected->GetCollaborationConnectorNodeID();
+            vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(this->collaborationNodeSelected->GetCollaborationConnectorNodeID()));
+            int state = connectorNode->GetState();
+            // if connection is active, we are assuming it was received through OpenIGTLink
+            if (state == 2)
+            {
+                node->SetDescription("Received by OpenIGTLink");
+            }
+        }
         // check if it was received through an OpenIGTLink connection
         const char* nodeDescription = node->GetDescription();
         if (nodeDescription) {
@@ -147,6 +159,7 @@ void vtkSlicerCollaborationLogic
                 }
             }
         }
+        
     }
 }
 

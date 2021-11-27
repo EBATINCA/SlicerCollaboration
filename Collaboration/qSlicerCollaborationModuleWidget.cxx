@@ -48,6 +48,7 @@
 #include <vtkMRMLMarkupsClosedCurveNode.h>
 #include <vtkXMLUtilities.h>
 #include <vtkMRMLMarkupsROINode.h>
+#include <vtkMRMLMarkupsFiducialNode.h>
 
 
 //-----------------------------------------------------------------------------
@@ -359,6 +360,29 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         // add observer to the display node to update the text node
                         displayNode->AddObserver(vtkCommand::ModifiedEvent, updateTextCallback);
                     }
+                    else if (selectedNode->IsA("vtkMRMLMarkupsFiducialNode"))
+                    {
+                        vtkMRMLMarkupsFiducialNode* markupsNode = vtkMRMLMarkupsFiducialNode::SafeDownCast(selectedNode);
+                        // get the display node
+                        vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
+                        char* displayClassName = "vtkMRMLMarkupsDisplayNode";
+                        // create a text node with the display information
+                        vtkMRMLTextNode* textNodeDisplay = createTextOfDisplayNode(displayNode, markupsNode->GetName(), displayClassName);
+                        // set attribute of the collaboration node to the selected node
+                        textNodeDisplay->SetAttribute(selected_collab_node, "true");
+                        // add node reference to the collaboration node
+                        collabNode->AddCollaborationSynchronizedNodeID(textNodeDisplay->GetID());
+                        // add as output node of the connector node
+                        textNodeDisplay->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
+                        connectorNode->RegisterOutgoingMRMLNode(textNodeDisplay);
+                        // add node reference to the display markups node
+                        displayNode->AddNodeReferenceRole("TextNode");
+                        displayNode->AddNodeReferenceID("TextNode", textNodeDisplay->GetID());
+                        // add observer to the markups node to update the text node
+                        displayNode->AddObserver(vtkCommand::ModifiedEvent, updateTextCallback);
+                        // send node
+                        connectorNode->PushNode(textNodeDisplay);
+                    }
                     // check if it is a line markups (non fiducial) node
                     else if (selectedNode->IsA("vtkMRMLMarkupsNode") && !selectedNode->IsA("vtkMRMLMarkupsFiducialNode"))
                     {
@@ -440,6 +464,7 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         markupsNode->AddNodeReferenceID("TextNode", textNode->GetID());
                         // add observer to the markups node to update the text node
                         markupsNode->AddObserver(vtkCommand::AnyEvent, updateTextCallback);
+
                         // get the display node
                         vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(markupsNode->GetDisplayNode());
                         char* displayClassName = "vtkMRMLMarkupsDisplayNode";
