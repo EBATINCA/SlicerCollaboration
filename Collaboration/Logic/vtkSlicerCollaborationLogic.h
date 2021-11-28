@@ -30,6 +30,7 @@
 
 // Slicer includes
 #include "vtkSlicerModuleLogic.h"
+#include "vtkXMLDataElement.h"
 
 // MRML includes
 #include "vtkMRMLCollaborationNode.h"
@@ -61,6 +62,7 @@ protected:
   virtual void UpdateFromMRMLScene();
   virtual void OnMRMLSceneNodeAdded(vtkMRMLNode* node);
   virtual void OnMRMLSceneNodeRemoved(vtkMRMLNode* node);
+  void orderTransforms(vtkXMLDataElement* res);
 private:
 
   vtkSlicerCollaborationLogic(const vtkSlicerCollaborationLogic&); // Not implemented

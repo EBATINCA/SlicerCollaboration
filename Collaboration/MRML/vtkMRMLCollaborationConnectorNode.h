@@ -66,6 +66,7 @@ protected:
   void ProcessIncomingDeviceModifiedEvent(vtkObject* caller, unsigned long event, igtlioDevice* modifiedDevice) override;
   void addMarkupsNode(vtkXMLDataElement* res);
   void addDisplayNode(vtkXMLDataElement* res);
+  void orderTransforms(vtkXMLDataElement* res);
 };
 
 #endif

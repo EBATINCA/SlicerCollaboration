@@ -49,6 +49,7 @@
 #include <vtkXMLUtilities.h>
 #include <vtkMRMLMarkupsROINode.h>
 #include <vtkMRMLMarkupsFiducialNode.h>
+#include <vtkMRMLLinearTransformNode.h>
 
 
 //-----------------------------------------------------------------------------
@@ -336,6 +337,14 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         connectorNode->RegisterOutgoingMRMLNode(selectedNode);
                         connectorNode->PushNode(selectedNode);
                     }
+                    // check if it observes a transform node and update it
+                    vtkMRMLNode* transformNode = vtkMRMLNode::SafeDownCast(selectedNode->GetNodeReference("transform"));
+                    if (transformNode)
+                    {
+                        updateTransformNodeText(transformNode);
+                        selectedNode->AddObserver(vtkMRMLTransformableNode::TransformModifiedEvent, updateTextCallback);
+                    }
+
                     // check if it is a model node
                     if (selectedNode->IsA("vtkMRMLModelNode"))
                     {
@@ -358,7 +367,8 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         displayNode->AddNodeReferenceRole("TextNode");
                         displayNode->AddNodeReferenceID("TextNode", textNode->GetID());
                         // add observer to the display node to update the text node
-                        displayNode->AddObserver(vtkCommand::ModifiedEvent, updateTextCallback);
+                        displayNode->AddObserver(vtkCommand::AnyEvent, updateTextCallback);
+                        //modelNode->AddObserver(vtkMRMLTransformableNode::TransformModifiedEvent, updateTextCallback);
                     }
                     else if (selectedNode->IsA("vtkMRMLMarkupsFiducialNode"))
                     {
@@ -382,6 +392,8 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         displayNode->AddObserver(vtkCommand::ModifiedEvent, updateTextCallback);
                         // send node
                         connectorNode->PushNode(textNodeDisplay);
+                        // check if it observes a synched transform node and update it
+                        vtkMRMLNode* transformNode = vtkMRMLNode::SafeDownCast(markupsNode->GetNodeReference("transform"));
                     }
                     // check if it is a line markups (non fiducial) node
                     else if (selectedNode->IsA("vtkMRMLMarkupsNode") && !selectedNode->IsA("vtkMRMLMarkupsFiducialNode"))
@@ -486,6 +498,68 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         connectorNode->PushNode(textNode);
                         connectorNode->PushNode(textNodeDisplay);
                     }
+                    else if (selectedNode->IsA("vtkMRMLLinearTransformNode"))
+                    {
+                        vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(selectedNode);
+                        std::string transformNodeID = transformNode->GetID();
+                        // create a text node to send the observing and observed nodes
+                        vtkMRMLTextNode* transformTextNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLTextNode"));
+                        // hide from Data module
+                        transformTextNode->SetHideFromEditors(1);
+                        this->mrmlScene()->AddNode(transformTextNode);
+                        // get transformed nodes
+                        vtkStringArray* collection = collabNode->GetCollaborationSynchronizedNodeIDs();
+                        std::string transformedNodesText = "";
+                        for (int i = 0; i < collection->GetNumberOfTuples(); i++)
+                        {
+                            std::string ID = collection->GetValue(i);
+                            vtkMRMLNode* node = vtkMRMLNode::SafeDownCast(this->mrmlScene()->GetNodeByID(ID));
+                            vtkMRMLNode* transformNode = vtkMRMLNode::SafeDownCast(node->GetNodeReference("transform"));
+                            if (transformNode)
+                            {
+                                std::string nodeTranformID = transformNode->GetID();
+                                if (transformNodeID == nodeTranformID)
+                                {
+                                    transformedNodesText.append(node->GetName());
+                                    transformedNodesText.append(",");
+                                }
+                            }
+                        }
+                        // remove the last comma
+                        if (transformedNodesText != "")
+                        {
+                            transformedNodesText.pop_back();
+                        }
+                        // write an XML text with the transform node attributes
+                        std::stringstream ss;
+                        ss << "<MRMLNode SuperclassName = \"vtkMRMLTransformNode\" ClassName = \"vtkMRMLLinearTransformNode\" TransformName = \"";
+                        ss << transformNode->GetName();
+                        ss << "\" TransformedNodes = \"";
+                        ss << transformedNodesText;
+                        ss << "\"";
+                        ss << " />";
+                        // add the XML to the text node
+                        transformTextNode->SetText(ss.str());
+                        // Set the same name as the model node + Text
+                        char* markupsNodeName = transformNode->GetName();
+                        char textName[] = "Text";
+                        char* textNodeName = new char[std::strlen(markupsNodeName) + std::strlen(textName) + 1];
+                        std::strcpy(textNodeName, markupsNodeName);
+                        std::strcat(textNodeName, textName);
+                        transformTextNode->SetName(textNodeName);
+                        // set attribute of the collaboration node to the selected node
+                        transformNode->SetAttribute(selected_collab_node, "true");
+                        // add node reference to the collaboration node
+                        collabNode->AddCollaborationSynchronizedNodeID(transformTextNode->GetID());
+                        // add as output node of the connector node
+                        transformTextNode->SetAttribute("OpenIGTLinkIF.pushOnConnect", "true");
+                        connectorNode->RegisterOutgoingMRMLNode(transformTextNode);
+                        // add node reference to the markups node
+                        transformNode->AddNodeReferenceRole("TextNode");
+                        transformNode->AddNodeReferenceID("TextNode", transformTextNode->GetID());
+                        // send node
+                        connectorNode->PushNode(transformTextNode);
+                    }
                     // update tree visibility
                     d->SynchronizedTreeView->model()->invalidateFilter();
                     d->AvailableNodesTreeView->model()->invalidateFilter();
@@ -520,9 +594,17 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                     collabNode->RemoveCollaborationSynchronizedNodeID(selectedNode->GetID());
                     // remove as output node of the connector node
                     connectorNode->UnregisterOutgoingMRMLNode(selectedNode);
+                    // remove observer to transforms
+                    selectedNode->RemoveObserver(updateTextCallback);
                     const char* att_push = selectedNode->GetAttribute("OpenIGTLinkIF.pushOnConnect");
                     if (att_push) {
                         selectedNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                    }
+                    // check if it observes a synched transform node and update it
+                    vtkMRMLNode* transformNode = vtkMRMLNode::SafeDownCast(selectedNode->GetNodeReference("transform"));
+                    if (transformNode && transformNode->GetAttribute(selected_collab_node))
+                    {
+                        updateTransformNodeText(transformNode);
                     }
                     // check if it is a model node, to remove the corresponding text node
                     if (selectedNode->IsA("vtkMRMLModelNode"))
@@ -592,6 +674,30 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
                             // remove from scene
                             displayTextNode->RemoveAllObservers();
                             this->mrmlScene()->RemoveNode(displayTextNode);
+                        }
+                    }
+                    if (selectedNode->IsA("vtkMRMLLinearTransformNode"))
+                    {
+                        vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(selectedNode);
+                        // Get the corresponding text node
+                        const char* textNodeID = transformNode->GetNthNodeReferenceID("TextNode", 0);
+                        vtkSmartPointer<vtkMRMLTextNode> textNode =
+                            vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetNodeByID(textNodeID));
+                        if (textNode)
+                        {
+                            // remove the attribute of the collaboration node from the selected node
+                            textNode->RemoveAttribute(selected_collab_node);
+                            // remove node reference from the collaboration node
+                            collabNode->RemoveCollaborationSynchronizedNodeID(textNode->GetID());
+                            // remove as output node of the connector node
+                            const char* att_push_text = selectedNode->GetAttribute("OpenIGTLinkIF.pushOnConnect");
+                            if (att_push_text) {
+                                textNode->RemoveAttribute("OpenIGTLinkIF.pushOnConnect");
+                            }
+                            connectorNode->UnregisterOutgoingMRMLNode(textNode);
+                            // remove from scene
+                            textNode->RemoveAllObservers();
+                            this->mrmlScene()->RemoveNode(textNode);
                         }
                     }
                     // update tree visibility
@@ -674,6 +780,25 @@ void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned l
             // Get the connector node associated to the collaboration node
             vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(self->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
             if (connectorNode) {
+
+                if (caller->IsA("vtkMRMLNode"))
+                {
+                    vtkMRMLNode* updatedNode = vtkMRMLNode::SafeDownCast(caller);
+                    // update all transform texts
+                    // get transformed nodes
+                    vtkStringArray* collection = collabNode->GetCollaborationSynchronizedNodeIDs();
+                    std::string transformedNodesText = "";
+                    for (int i = 0; i < collection->GetNumberOfTuples(); i++)
+                    {
+                        std::string ID = collection->GetValue(i);
+                        vtkMRMLNode* node = vtkMRMLNode::SafeDownCast(self->mrmlScene()->GetNodeByID(ID));
+                        if (node->IsA("vtkMRMLLinearTransformNode"))
+                        {
+                            self->updateTransformNodeText(node);
+                        }
+                    }
+                }
+                
                 if (caller->IsA("vtkMRMLDisplayNode"))
                 {
                     vtkMRMLDisplayNode* displayNode = vtkMRMLDisplayNode::SafeDownCast(caller);
@@ -814,4 +939,60 @@ void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned l
             }
         }
     }       
+}
+
+
+void qSlicerCollaborationModuleWidget::updateTransformNodeText(vtkMRMLNode* node)
+{
+    Q_D(qSlicerCollaborationModuleWidget);
+
+    vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(node);
+    std::string transformNodeID = transformNode->GetID();
+    // get the corresponding text node
+    const char* textNodeID = transformNode->GetNthNodeReferenceID("TextNode", 0);
+    vtkMRMLTextNode* transformTextNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->GetNodeByID(textNodeID));
+    if (transformTextNode)
+    {
+        vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
+        if (collabNode) {
+            // Get the connector node associated to the collaboration node
+            vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+            if (connectorNode) {
+                // get transformed nodes
+                vtkStringArray* collection = collabNode->GetCollaborationSynchronizedNodeIDs();
+                std::string transformedNodesText = "";
+                for (int i = 0; i < collection->GetNumberOfTuples(); i++)
+                {
+                    std::string ID = collection->GetValue(i);
+                    vtkMRMLNode* node = vtkMRMLNode::SafeDownCast(this->mrmlScene()->GetNodeByID(ID));
+                    vtkMRMLNode* transformNode = vtkMRMLNode::SafeDownCast(node->GetNodeReference("transform"));
+                    if (transformNode)
+                    {
+                        std::string nodeTranformID = transformNode->GetID();
+                        if (transformNodeID == nodeTranformID)
+                        {
+                            transformedNodesText.append(node->GetName());
+                            transformedNodesText.append(",");
+                        }
+                    }
+                }
+                // remove the last comma
+                if (transformedNodesText != "")
+                {
+                    transformedNodesText.pop_back();
+                }
+                // write an XML text with the transform node attributes
+                std::stringstream ss;
+                ss << "<MRMLNode SuperclassName = \"vtkMRMLTransformNode\" ClassName = \"vtkMRMLLinearTransformNode\" TransformName = \"";
+                ss << transformNode->GetName();
+                ss << "\" TransformedNodes = \"";
+                ss << transformedNodesText;
+                ss << "\"";
+                ss << " />";
+                // add the XML to the text node
+                transformTextNode->SetText(ss.str());
+                connectorNode->PushNode(transformTextNode);
+            }
+        }
+    }
 }

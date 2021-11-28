@@ -61,6 +61,7 @@ protected slots:
   void unsynchronizeSelectedNodes();
   void sendNodesForSynchronization();
   vtkMRMLTextNode* createTextOfDisplayNode(vtkMRMLNode* displayNode,char* nodeName, char* className);
+  void updateTransformNodeText(vtkMRMLNode* transformNode);
 
 protected:
   QScopedPointer<qSlicerCollaborationModuleWidgetPrivate> d_ptr;

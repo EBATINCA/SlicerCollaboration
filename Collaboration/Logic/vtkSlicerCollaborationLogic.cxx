@@ -37,6 +37,9 @@
 // Collaboration module includes
 #include "vtkMRMLCollaborationNode.h"
 #include "vtkMRMLCollaborationConnectorNode.h"
+#include <vtkMRMLLinearTransformNode.h>
+#include <vtkMRMLTextNode.h>
+#include <vtkXMLUtilities.h>
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkSlicerCollaborationLogic);
@@ -129,15 +132,15 @@ void vtkSlicerCollaborationLogic
         }
         this->Modified();
     }
-    else if (node->IsA("vtkMRMLModelNode") || node->IsA("vtkMRMLLinearTransformNode")|| 
-        node->IsA("vtkMRMLMarkupsNode") || node->IsA("vtkMRMLTextNode") ||
-        node->IsA("vtkMRMLScalarVolumeNode"))
+    else if (node->IsA("vtkMRMLModelNode") || node->IsA("vtkMRMLLinearTransformNode") || 
+        node->IsA("vtkMRMLMarkupsNode") || node->IsA("vtkMRMLTextNode") || node->IsA("vtkMRMLScalarVolumeNode"))
     {
         // fiducials do not include the description of "Received by OpenIGTLink"
         if (node->IsA("vtkMRMLMarkupsFiducialNode"))
         {
-            this->collaborationNodeSelected->GetCollaborationConnectorNodeID();
-            vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(this->collaborationNodeSelected->GetCollaborationConnectorNodeID()));
+            const char* connectorNodeID = this->collaborationNodeSelected->GetCollaborationConnectorNodeID();
+            vtkMRMLCollaborationConnectorNode* connectorNode = 
+                vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(connectorNodeID));
             int state = connectorNode->GetState();
             // if connection is active, we are assuming it was received through OpenIGTLink
             if (state == 2)
@@ -156,10 +159,77 @@ void vtkSlicerCollaborationLogic
                 if (this->collaborationNodeSelected)
                 {
                     this->collaborationNodeSelected->AddCollaborationSynchronizedNodeID(node->GetID());
+
                 }
+                // update transforms
+                // get transformed nodes
+                vtkStringArray* collection = this->collaborationNodeSelected->GetCollaborationSynchronizedNodeIDs();
+                std::string transformedNodesText = "";
+                for (int i = 0; i < collection->GetNumberOfTuples(); i++)
+                {
+                    std::string ID = collection->GetValue(i);
+                    vtkMRMLNode* node = vtkMRMLNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(ID));
+                    if (node->IsA("vtkMRMLLinearTransformNode"))
+                    {
+                        const char* textNodeReferenceID = node->GetNthNodeReferenceID("TextNode", 0);
+                        vtkMRMLTextNode* transformTextNode = 
+                            vtkMRMLTextNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(textNodeReferenceID));
+                        if (transformTextNode)
+                        {
+                            std::stringstream ss;
+                            ss << transformTextNode->GetText();
+                            vtkXMLDataElement* res =
+                                vtkXMLUtilities::ReadElementFromStream(ss);
+                            this->orderTransforms(res);
+                        }
+                    }
+                }  
             }
         }
-        
+    }
+}
+
+void vtkSlicerCollaborationLogic::orderTransforms(vtkXMLDataElement* res)
+{
+    // read attributes
+    int numberOfAttributes = res->GetNumberOfAttributes();
+    std::vector<const char*> atts_v;
+    for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
+    {
+        const char* attName = res->GetAttributeName(attributeIndex);
+        const char* attValue = res->GetAttribute(attName);
+        atts_v.push_back(attName);
+        atts_v.push_back(attValue);
+    }
+    atts_v.push_back(nullptr);
+    const char** atts = (atts_v.data());
+
+    // get transform node
+    std::string transformName = res->GetAttribute("TransformName");
+    vtkMRMLLinearTransformNode* transformNode = 
+        vtkMRMLLinearTransformNode::SafeDownCast(this->GetMRMLScene()->GetFirstNodeByName(transformName.c_str()));
+
+    // get transformed nodes attribute
+    std::string transformedNodesStr = res->GetAttribute("TransformedNodes");
+
+    // get every coordinate
+    std::stringstream ss(transformedNodesStr);
+    std::vector<std::string> vect;
+    while (ss.good())
+    {
+        std::string substr;
+        getline(ss, substr, ',');
+        vect.push_back(substr);
+    }
+    int numberOfTransformedNodes = vect.size();
+    for (int i = 0; i < numberOfTransformedNodes; i++)
+    {
+        vtkMRMLTransformableNode* node = 
+            vtkMRMLTransformableNode::SafeDownCast(this->GetMRMLScene()->GetFirstNodeByName(vect[i].c_str()));
+        if (node)
+        {
+            node->SetAndObserveTransformNodeID(transformNode->GetID());
+        }
     }
 }
 
@@ -177,7 +247,9 @@ void vtkSlicerCollaborationLogic
   {
     vtkMRMLCollaborationNode* collaborationNode = vtkMRMLCollaborationNode::SafeDownCast(node);
     // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(collaborationNode->GetCollaborationConnectorNodeID()));
+    const char* connectorNodeID = collaborationNode->GetCollaborationConnectorNodeID();
+    vtkMRMLCollaborationConnectorNode* connectorNode = 
+        vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetMRMLScene()->GetNodeByID(connectorNodeID));
     this->GetMRMLScene()->RemoveNode(connectorNode);
     collaborationNode->SetCollaborationConnectorNodeID(nullptr);
     this->Modified();

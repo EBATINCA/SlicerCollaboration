@@ -47,6 +47,7 @@
 #include <vtkMRMLMarkupsClosedCurveNode.h>
 #include <vtkMRMLMarkupsROINode.h>
 #include <vtkMRMLMarkupsFiducialNode.h>
+#include <vtkMRMLLinearTransformNode.h>
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationConnectorNode);
@@ -200,6 +201,31 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
                 {
                     addMarkupsNode(res);
                 }
+                else if (strcmp(res->GetAttribute("SuperclassName"), "vtkMRMLTransformNode") == 0)
+                {
+                    orderTransforms(res);
+                    vtkMRMLTextNode* textNode = vtkMRMLTextNode::SafeDownCast(modifiedNode);
+                    textNode->SetEncoding(stringDevice->GetContent().encoding);
+                    textNode->SetText(stringDevice->GetContent().string_msg.c_str());
+                    // set name
+                    const char* transformNodeName = res->GetAttribute("TransformName");
+                    char textName[] = "Text";
+                    char* transformTextNodeName = new char[std::strlen(transformNodeName) + std::strlen(textName) + 1];
+                    std::strcpy(transformTextNodeName, transformNodeName);
+                    std::strcat(transformTextNodeName, textName);
+                    textNode->SetName(transformTextNodeName);
+                    // make it visible as it does not contain the display node attributes
+                    textNode->SetHideFromEditors(0);
+                    textNode->Modified();
+                    // if transform already arrived, add reference
+                    vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(transformNodeName));
+                    if (transformNode)
+                    {
+                        // add node reference to the markups node
+                        transformNode->AddNodeReferenceRole("TextNode");
+                        transformNode->AddNodeReferenceID("TextNode", textNode->GetID());
+                    }
+                }
             }
             else
             {
@@ -231,8 +257,73 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
             }
             modelNode->Modified();
         }
+        else if (strcmp(deviceType.c_str(), "TRANSFORM") == 0)
+        {
+            vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(modifiedNode);
+            // see if the text node was already defined and if so, apply it
+            char* transformNodeName = transformNode->GetName();
+            char textName[] = "Text";
+            char* transformTextNodeName = new char[std::strlen(transformNodeName) + std::strlen(textName) + 1];
+            std::strcpy(transformTextNodeName, transformNodeName);
+            std::strcat(transformTextNodeName, textName);
+            vtkMRMLTextNode* transformTextNode = vtkMRMLTextNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(transformTextNodeName));
+            if (transformTextNode)
+            {
+                std::stringstream ss;
+                ss << transformTextNode->GetText();
+                vtkXMLDataElement* res =
+                    vtkXMLUtilities::ReadElementFromStream(ss);
+                orderTransforms(res);
+                // if text node already arrived, add node reference
+                transformNode->AddNodeReferenceRole("TextNode");
+                transformNode->AddNodeReferenceID("TextNode", transformTextNode->GetID());
+            }
+        }
     }
     Superclass::ProcessIncomingDeviceModifiedEvent(caller, event, modifiedDevice);
+}
+
+
+void vtkMRMLCollaborationConnectorNode::orderTransforms(vtkXMLDataElement* res)
+{
+    // read attributes
+    int numberOfAttributes = res->GetNumberOfAttributes();
+    std::vector<const char*> atts_v;
+    for (int attributeIndex = 0; attributeIndex < numberOfAttributes; attributeIndex++)
+    {
+        const char* attName = res->GetAttributeName(attributeIndex);
+        const char* attValue = res->GetAttribute(attName);
+        atts_v.push_back(attName);
+        atts_v.push_back(attValue);
+    }
+    atts_v.push_back(nullptr);
+    const char** atts = (atts_v.data());
+
+    // get transform node
+    std::string transformName = res->GetAttribute("TransformName");
+    vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(transformName.c_str()));
+
+    // get transformed nodes attribute
+    std::string transformedNodesStr = res->GetAttribute("TransformedNodes");
+
+    // get every transformed node
+    std::stringstream ss(transformedNodesStr);
+    std::vector<std::string> vect;
+    while (ss.good())
+    {
+        std::string substr;
+        getline(ss, substr, ',');
+        vect.push_back(substr);
+    }
+    int numberOfTransformedNodes = vect.size();
+    for (int i = 0; i < numberOfTransformedNodes; i++)
+    {
+        vtkMRMLTransformableNode* node = vtkMRMLTransformableNode::SafeDownCast(this->GetScene()->GetFirstNodeByName(vect[i].c_str()));
+        if (node && transformNode)
+        {
+            node->SetAndObserveTransformNodeID(transformNode->GetID());
+        }
+    }
 }
 
 void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
