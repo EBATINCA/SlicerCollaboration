@@ -25,6 +25,7 @@
 // Slicer includes
 #include "qSlicerCollaborationModuleWidget.h"
 #include "ui_qSlicerCollaborationModuleWidget.h"
+#include "qSlicerModuleManager.h"
 
 // Colaboration module includes
 #include "vtkMRMLCollaborationNode.h"
@@ -50,6 +51,9 @@
 #include <vtkMRMLMarkupsROINode.h>
 #include <vtkMRMLMarkupsFiducialNode.h>
 #include <vtkMRMLLinearTransformNode.h>
+#include <qSlicerApplication.h>
+#include <qSlicerAbstractModule.h>
+#include <ctkCheckBox.h>
 
 
 //-----------------------------------------------------------------------------
@@ -103,6 +107,7 @@ void qSlicerCollaborationModuleWidget::setup()
 
   connect(d->MRMLNodeComboBox, SIGNAL(currentNodeChanged(vtkMRMLNode*)), this, SLOT(setCollaborationNode(vtkMRMLNode*)));
   connect(d->connectButton, SIGNAL(clicked()), this, SLOT(onConnectButtonClicked()));
+  connect(d->connectVRButton, SIGNAL(clicked()), this, SLOT(onConnectVRButtonClicked()));
   // Update connector node values when parameter values are modified in the GUI
   connect(d->serverModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNode()));
   connect(d->clientModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNode()));
@@ -995,4 +1000,43 @@ void qSlicerCollaborationModuleWidget::updateTransformNodeText(vtkMRMLNode* node
             }
         }
     }
+}
+
+void qSlicerCollaborationModuleWidget::onConnectVRButtonClicked()
+{
+    Q_D(qSlicerCollaborationModuleWidget);
+    
+    qSlicerAbstractCoreModule* module = qSlicerApplication::application()->moduleManager()->module("VirtualReality");
+    qSlicerAbstractModule* moduleWithAction = qobject_cast<qSlicerAbstractModule*>(module);
+    if (!moduleWithAction)
+    {
+        d->connectionTextMessage->setText("Install SlicerVR extension to use this functionality");
+        return;
+    }
+    else {
+        // check if ConnectCheckBox from VirtualReality module is checked
+        // Get module widget
+        qSlicerAbstractModuleWidget* moduleWidget = dynamic_cast<qSlicerAbstractModuleWidget*>(moduleWithAction->widgetRepresentation());
+        // Get connection to VR hardware checkbox
+        ctkCheckBox* connectCheckBox = moduleWidget->findChild<ctkCheckBox*>("ConnectCheckBox");
+        ctkCheckBox* enableRendering = moduleWidget->findChild<ctkCheckBox*>("RenderingEnabledCheckBox");
+        // disconnect
+        if (connectCheckBox->isChecked())
+        {
+            connectCheckBox->setChecked(0);
+            enableRendering->setChecked(0);
+            d->connectVRButton->setText("Connect to VR hardware");
+            d->connectionTextMessage->setText("");
+        }
+        // connect
+        else
+        {
+            connectCheckBox->setChecked(1);
+            enableRendering->setChecked(1);
+            d->connectVRButton->setText("Disconnect VR");
+            // show connection status text
+            QLabel* connectionStatus = moduleWidget->findChild<QLabel*>("ConnectionStatusLabel");
+            d->connectionTextMessage->setText(connectionStatus->text());
+        }
+    }   
 }
