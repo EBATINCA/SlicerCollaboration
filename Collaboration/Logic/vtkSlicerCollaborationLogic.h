@@ -51,6 +51,11 @@ public:
   vtkTypeMacro(vtkSlicerCollaborationLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
   vtkMRMLCollaborationNode* collaborationNodeSelected;
+  void loadAvatars();
+
+  static const char* AVATAR_HEAD_MODEL_NAME;
+  static const char* AVATAR_HANDPOINTL_MODEL_NAME;
+  static const char* AVATAR_HANDPOINTR_MODEL_NAME;
 
 protected:
   vtkSlicerCollaborationLogic();

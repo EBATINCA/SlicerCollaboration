@@ -24,6 +24,7 @@
 
 // MRML includes
 #include <vtkMRMLScene.h>
+#include "vtkMRMLModelNode.h"
 
 // VTK includes
 #include <vtkIntArray.h>
@@ -40,6 +41,14 @@
 #include <vtkMRMLLinearTransformNode.h>
 #include <vtkMRMLTextNode.h>
 #include <vtkXMLUtilities.h>
+#include "vtkSlicerModelsLogic.h"
+#include <vtkMRMLModelHierarchyNode.h>
+
+//----------------------------------------------------------------------------
+// Avatars
+const char* vtkSlicerCollaborationLogic::AVATAR_HEAD_MODEL_NAME = "head";
+const char* vtkSlicerCollaborationLogic::AVATAR_HANDPOINTL_MODEL_NAME = "handPoint_L";
+const char* vtkSlicerCollaborationLogic::AVATAR_HANDPOINTR_MODEL_NAME = "handPoint_R";
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkSlicerCollaborationLogic);
@@ -254,4 +263,28 @@ void vtkSlicerCollaborationLogic
     collaborationNode->SetCollaborationConnectorNodeID(nullptr);
     this->Modified();
   }
+}
+
+void vtkSlicerCollaborationLogic::loadAvatars()
+{
+    // get directory
+    std::string moduleShareDirectory = this->GetModuleShareDirectory();
+
+    // Create a models logic for convenient loading of components
+    vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::New();
+    modelsLogic->SetMRMLScene(this->GetMRMLScene());
+
+    // Load basic additional device models
+
+    // Head
+    std::string headModelFilePath = moduleShareDirectory + "/" + AVATAR_HEAD_MODEL_NAME + ".stl";
+    vtkMRMLModelNode* headModelNode = modelsLogic->AddModel(headModelFilePath.c_str());
+    
+    // Left hand
+    std::string handPointLModelFilePath = moduleShareDirectory + "/" + AVATAR_HANDPOINTL_MODEL_NAME + ".stl";
+    vtkMRMLModelNode* handPointLModelNode = modelsLogic->AddModel(handPointLModelFilePath.c_str());
+
+    // Right hand
+    std::string handPointRModelFilePath = moduleShareDirectory + "/" + AVATAR_HANDPOINTR_MODEL_NAME + ".stl";
+    vtkMRMLModelNode* handPointRModelNode = modelsLogic->AddModel(handPointRModelFilePath.c_str());
 }

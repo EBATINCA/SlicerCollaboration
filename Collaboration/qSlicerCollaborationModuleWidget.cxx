@@ -108,6 +108,7 @@ void qSlicerCollaborationModuleWidget::setup()
   connect(d->MRMLNodeComboBox, SIGNAL(currentNodeChanged(vtkMRMLNode*)), this, SLOT(setCollaborationNode(vtkMRMLNode*)));
   connect(d->connectButton, SIGNAL(clicked()), this, SLOT(onConnectButtonClicked()));
   connect(d->connectVRButton, SIGNAL(clicked()), this, SLOT(onConnectVRButtonClicked()));
+  connect(d->LoadAvatarsButton, SIGNAL(clicked()), this, SLOT(onLoadAvatarsButtonClicked()));
   // Update connector node values when parameter values are modified in the GUI
   connect(d->serverModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNode()));
   connect(d->clientModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNode()));
@@ -1039,4 +1040,18 @@ void qSlicerCollaborationModuleWidget::onConnectVRButtonClicked()
             d->connectionTextMessage->setText(connectionStatus->text());
         }
     }   
+}
+
+void qSlicerCollaborationModuleWidget::onLoadAvatarsButtonClicked()
+{
+    Q_D(qSlicerCollaborationModuleWidget);
+    if (this->logic() == nullptr)
+    {
+        return;
+    }
+    vtkSlicerCollaborationLogic* collaborationLogic = vtkSlicerCollaborationLogic::SafeDownCast(this->logic());
+    if (collaborationLogic)
+    {
+        collaborationLogic->loadAvatars();
+    }
 }

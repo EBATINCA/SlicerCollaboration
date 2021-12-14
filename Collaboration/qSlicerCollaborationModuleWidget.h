@@ -55,6 +55,7 @@ protected slots:
   void setCollaborationNode(vtkMRMLNode*);
   void onConnectButtonClicked();
   void onConnectVRButtonClicked();
+  void onLoadAvatarsButtonClicked();
   /// Internal function to update the CollaborationConnector node based on the property widget
   void updateConnectorNode();
 
