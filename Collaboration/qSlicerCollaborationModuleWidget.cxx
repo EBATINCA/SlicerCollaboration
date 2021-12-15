@@ -1021,11 +1021,13 @@ void qSlicerCollaborationModuleWidget::onConnectVRButtonClicked()
         // Get connection to VR hardware checkbox
         ctkCheckBox* connectCheckBox = moduleWidget->findChild<ctkCheckBox*>("ConnectCheckBox");
         ctkCheckBox* enableRendering = moduleWidget->findChild<ctkCheckBox*>("RenderingEnabledCheckBox");
+        ctkCheckBox* ControllerTransformsUpdateCheckBox = moduleWidget->findChild<ctkCheckBox*>("ControllerTransformsUpdateCheckBox");
         // disconnect
         if (connectCheckBox->isChecked())
         {
             connectCheckBox->setChecked(0);
             enableRendering->setChecked(0);
+            ControllerTransformsUpdateCheckBox->setChecked(0);
             d->connectVRButton->setText("Connect to VR hardware");
             d->connectionTextMessage->setText("");
         }
@@ -1034,10 +1036,12 @@ void qSlicerCollaborationModuleWidget::onConnectVRButtonClicked()
         {
             connectCheckBox->setChecked(1);
             enableRendering->setChecked(1);
+            ControllerTransformsUpdateCheckBox->setChecked(1);
             d->connectVRButton->setText("Disconnect VR");
             // show connection status text
             QLabel* connectionStatus = moduleWidget->findChild<QLabel*>("ConnectionStatusLabel");
             d->connectionTextMessage->setText(connectionStatus->text());
+            d->LoadAvatarsButton->setEnabled(1);
         }
     }   
 }
@@ -1053,5 +1057,20 @@ void qSlicerCollaborationModuleWidget::onLoadAvatarsButtonClicked()
     if (collaborationLogic)
     {
         collaborationLogic->loadAvatars();
+        d->LoadAvatarsButton->setEnabled(0);
+
+        // hide controllers
+        qSlicerAbstractCoreModule* module = qSlicerApplication::application()->moduleManager()->module("VirtualReality");
+        qSlicerAbstractModule* moduleWithAction = qobject_cast<qSlicerAbstractModule*>(module);
+        if (!moduleWithAction)
+        {
+            d->connectionTextMessage->setText("Install SlicerVR extension to use this functionality");
+            return;
+        }
+        else {
+            qSlicerAbstractModuleWidget* moduleWidget = dynamic_cast<qSlicerAbstractModuleWidget*>(moduleWithAction->widgetRepresentation());
+            ctkCheckBox* ControllerModelsVisibleCheckBox = moduleWidget->findChild<ctkCheckBox*>("ControllerModelsVisibleCheckBox");
+            ControllerModelsVisibleCheckBox->setChecked(0);
+        }
     }
 }

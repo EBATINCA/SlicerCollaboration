@@ -22,6 +22,7 @@
 // Collaboration Logic includes
 #include "vtkSlicerCollaborationLogic.h"
 
+
 // MRML includes
 #include <vtkMRMLScene.h>
 #include "vtkMRMLModelNode.h"
@@ -287,4 +288,13 @@ void vtkSlicerCollaborationLogic::loadAvatars()
     // Right hand
     std::string handPointRModelFilePath = moduleShareDirectory + "/" + AVATAR_HANDPOINTR_MODEL_NAME + ".stl";
     vtkMRMLModelNode* handPointRModelNode = modelsLogic->AddModel(handPointRModelFilePath.c_str());
+
+    // Apply transforms
+    vtkMRMLLinearTransformNode* transformHeadNode = vtkMRMLLinearTransformNode::SafeDownCast(this->GetMRMLScene()->GetFirstNodeByName("VirtualReality.HMD"));
+    headModelNode->SetAndObserveTransformNodeID(transformHeadNode->GetID());
+    vtkMRMLLinearTransformNode* transformHandLNode = vtkMRMLLinearTransformNode::SafeDownCast(this->GetMRMLScene()->GetFirstNodeByName("VirtualReality.LeftController"));
+    handPointLModelNode->SetAndObserveTransformNodeID(transformHandLNode->GetID());
+    vtkMRMLLinearTransformNode* transformHandRNode = vtkMRMLLinearTransformNode::SafeDownCast(this->GetMRMLScene()->GetFirstNodeByName("VirtualReality.RightController"));
+    handPointRModelNode->SetAndObserveTransformNodeID(transformHandRNode->GetID());
+
 }

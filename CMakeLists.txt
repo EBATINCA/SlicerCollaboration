@@ -26,7 +26,6 @@ set(SlicerOpenIGTLink_ADDITIONAL_MODULE_PATHS
   ${SlicerOpenIGTLink_DIR}/${Slicer_QTSCRIPTEDMODULES_LIB_DIR}
   )
 
-
 #-----------------------------------------------------------------------------
 # Extension modules
 add_subdirectory(Collaboration)
