@@ -44,7 +44,7 @@ public:
 
   vtkMRMLNode* CreateNodeInstance() override;
   /// Get node XML tag name (like Volume, Model)
-  const char* GetNodeTagName() override {return "CollaborationNode";}
+  const char* GetNodeTagName() override {return "Collaboration";}
 
   /// Read node attributes from XML file
   void ReadXMLAttributes(const char** atts) override;
