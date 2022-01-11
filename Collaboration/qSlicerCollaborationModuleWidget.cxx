@@ -1037,11 +1037,14 @@ void qSlicerCollaborationModuleWidget::onConnectVRButtonClicked()
             connectCheckBox->setChecked(1);
             enableRendering->setChecked(1);
             ControllerTransformsUpdateCheckBox->setChecked(1);
-            d->connectVRButton->setText("Disconnect VR");
             // show connection status text
             QLabel* connectionStatus = moduleWidget->findChild<QLabel*>("ConnectionStatusLabel");
             d->connectionTextMessage->setText(connectionStatus->text());
             d->LoadAvatarsButton->setEnabled(1);
+            if (connectionStatus->text() != "Connection failed")
+            {
+                d->connectVRButton->setText("Disconnect VR");
+            }
         }
     }   
 }
