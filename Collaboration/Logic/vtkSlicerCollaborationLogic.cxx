@@ -146,7 +146,7 @@ void vtkSlicerCollaborationLogic
         node->IsA("vtkMRMLMarkupsNode") || node->IsA("vtkMRMLTextNode") || node->IsA("vtkMRMLScalarVolumeNode"))
     {
         // fiducials do not include the description of "Received by OpenIGTLink"
-        if (node->IsA("vtkMRMLMarkupsFiducialNode"))
+        if (node->IsA("vtkMRMLMarkupsFiducialNode") && this->collaborationNodeSelected)
         {
             const char* connectorNodeID = this->collaborationNodeSelected->GetCollaborationConnectorNodeID();
             vtkMRMLCollaborationConnectorNode* connectorNode = 
