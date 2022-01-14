@@ -510,6 +510,8 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
                         std::string transformNodeID = transformNode->GetID();
                         // create a text node to send the observing and observed nodes
                         vtkMRMLTextNode* transformTextNode = vtkMRMLTextNode::SafeDownCast(this->mrmlScene()->CreateNodeByClass("vtkMRMLTextNode"));
+                        // set attribute of the collaboration node to the selected node
+                        transformTextNode->SetAttribute(selected_collab_node, "true");
                         // hide from Data module
                         transformTextNode->SetHideFromEditors(1);
                         this->mrmlScene()->AddNode(transformTextNode);
