@@ -40,12 +40,9 @@ class Q_SLICER_QTMODULES_COLLABORATION_EXPORT qSlicerCollaborationModuleWidget :
   Q_OBJECT
 
 public:
-
   typedef qSlicerAbstractModuleWidget Superclass;
   qSlicerCollaborationModuleWidget(QWidget *parent=0);
   virtual ~qSlicerCollaborationModuleWidget();
-  const char* selected_collab_node;
-  vtkCallbackCommand* updateTextCallback;
 
 public slots:
   /// Update widget GUI from collaboration node
@@ -70,6 +67,10 @@ protected:
   static void nodeUpdated(vtkObject* caller, unsigned long event, void* clientData, void* callData);
 
   virtual void setup();
+
+private:
+  const char* SelectedCollaborationNode; //TODO: Change type to QString and review usage
+  vtkCallbackCommand* UpdateTextCallback;
 
 private:
   Q_DECLARE_PRIVATE(qSlicerCollaborationModuleWidget);

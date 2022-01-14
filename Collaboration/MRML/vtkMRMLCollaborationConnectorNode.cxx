@@ -19,12 +19,22 @@
 
 ==============================================================================*/
 
-// MRML includes
 #include "vtkMRMLCollaborationConnectorNode.h"
+
+// Slicer MRML includes
 #include "vtkMRMLScene.h"
 #include "vtkMRMLModelNode.h"
 #include "vtkMRMLModelDisplayNode.h"
 #include "vtkMRMLTextNode.h"
+#include <vtkMRMLMarkupsLineNode.h>
+#include <vtkMRMLMarkupsPlaneNode.h>
+#include <vtkMRMLMarkupsAngleNode.h>
+#include <vtkMRMLMarkupsCurveNode.h>
+#include <vtkMRMLMarkupsClosedCurveNode.h>
+#include <vtkMRMLMarkupsROINode.h>
+#include <vtkMRMLMarkupsFiducialNode.h>
+#include <vtkMRMLLinearTransformNode.h>
+
 
 // VTK includes
 #include <vtkNew.h>
@@ -40,14 +50,6 @@
 
 // OpenIGTLinkIO include
 #include <igtlioPolyDataDevice.h>
-#include <vtkMRMLMarkupsLineNode.h>
-#include <vtkMRMLMarkupsPlaneNode.h>
-#include <vtkMRMLMarkupsAngleNode.h>
-#include <vtkMRMLMarkupsCurveNode.h>
-#include <vtkMRMLMarkupsClosedCurveNode.h>
-#include <vtkMRMLMarkupsROINode.h>
-#include <vtkMRMLMarkupsFiducialNode.h>
-#include <vtkMRMLLinearTransformNode.h>
 
 //----------------------------------------------------------------------------
 vtkMRMLNodeNewMacro(vtkMRMLCollaborationConnectorNode);

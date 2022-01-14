@@ -25,7 +25,7 @@
 // OpenIGTLink includes
 #include "vtkMRMLIGTLConnectorNode.h"
 
-// std includes
+// VTK includes
 #include <vtkXMLDataElement.h>
 
 // Collaboration includes
@@ -56,17 +56,18 @@ public:
   vtkMRMLCopyContentMacro(vtkMRMLCollaborationConnectorNode);
 
 protected:
-  vtkMRMLCollaborationConnectorNode();
-  ~vtkMRMLCollaborationConnectorNode() override;
-  vtkMRMLCollaborationConnectorNode(const vtkMRMLCollaborationConnectorNode&);
-  void operator=(const vtkMRMLCollaborationConnectorNode&);
-
   unsigned int AssignOutGoingNodeToDevice(vtkMRMLNode* node, igtlioDevicePointer device) override;
   vtkMRMLNode* CreateNewMRMLNodeForDevice(igtlioDevice* device) override;
   void ProcessIncomingDeviceModifiedEvent(vtkObject* caller, unsigned long event, igtlioDevice* modifiedDevice) override;
   void addMarkupsNode(vtkXMLDataElement* res);
   void addDisplayNode(vtkXMLDataElement* res);
   void orderTransforms(vtkXMLDataElement* res);
+
+protected:
+  vtkMRMLCollaborationConnectorNode();
+  ~vtkMRMLCollaborationConnectorNode() override;
+  vtkMRMLCollaborationConnectorNode(const vtkMRMLCollaborationConnectorNode&);
+  void operator=(const vtkMRMLCollaborationConnectorNode&);
 };
 
 #endif
