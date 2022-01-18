@@ -465,7 +465,7 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
             if (selectedNode->IsA("vtkMRMLMarkupsROINode"))
             {
               vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(selectedNode);
-              double rad[3];
+              double rad[3] = {0.0};
               markupsROINode->GetRadiusXYZ(rad);
               std::string ROIradiusText = " ROIRadius = \"";
               ROIradiusText.append("[");
@@ -956,7 +956,7 @@ void qSlicerCollaborationModuleWidget::nodeUpdated(vtkObject* caller, unsigned l
             if (markupsNode->IsA("vtkMRMLMarkupsROINode"))
             {
               vtkMRMLMarkupsROINode* markupsROINode = vtkMRMLMarkupsROINode::SafeDownCast(markupsNode);
-              double rad[3];
+              double rad[3] = {0.0};
               markupsROINode->GetRadiusXYZ(rad);
               std::string roiRadiusText = " ROIRadius = \"";
               roiRadiusText.append("[");

@@ -573,7 +573,7 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement* res)
         }
 
         // apply ROI radius
-        double ROIrad[3];
+        double ROIrad[3] = {0.0};
         ROIrad[0] = std::stod(vect[0].c_str());
         ROIrad[1] = std::stod(vect[1].c_str());
         ROIrad[2] = std::stod(vect[2].c_str());
