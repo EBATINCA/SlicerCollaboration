@@ -27,13 +27,10 @@
 #include <vtkStringArray.h>
 #include <vtkCollection.h>
 
-//#include "vtkMRMLCollaborationConnectorNode.h"
 class vtkMRMLCollaborationConnectorNode;
 // Collaboration includes
 #include "vtkSlicerCollaborationModuleMRMLExport.h"
 
-/// \brief TODO
-/// TODO
 class VTK_SLICER_COLLABORATION_MODULE_MRML_EXPORT vtkMRMLCollaborationNode : public vtkMRMLNode
 {
 public:

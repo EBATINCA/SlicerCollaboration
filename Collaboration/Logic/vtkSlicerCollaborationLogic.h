@@ -19,11 +19,9 @@
 
 ==============================================================================*/
 
-// .NAME vtkSlicerCollaborationLogic - slicer logic class for volumes manipulation
+// .NAME vtkSlicerCollaborationLogic - slicer logic class for slicer collaboration
 // .SECTION Description
-// This class manages the logic associated with reading, saving,
-// and changing propertied of the volumes
-
+// This class manages the logic associated with the synchronization of nodes for collaborative sessions
 
 #ifndef __vtkSlicerCollaborationLogic_h
 #define __vtkSlicerCollaborationLogic_h
@@ -39,7 +37,6 @@
 #include <cstdlib>
 
 #include "vtkSlicerCollaborationModuleLogicExport.h"
-
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class VTK_SLICER_COLLABORATION_MODULE_LOGIC_EXPORT vtkSlicerCollaborationLogic :

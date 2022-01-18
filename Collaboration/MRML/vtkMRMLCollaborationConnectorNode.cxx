@@ -35,7 +35,6 @@
 #include <vtkMRMLMarkupsFiducialNode.h>
 #include <vtkMRMLLinearTransformNode.h>
 
-
 // VTK includes
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
@@ -66,11 +65,6 @@ vtkMRMLCollaborationConnectorNode::~vtkMRMLCollaborationConnectorNode() = defaul
 void vtkMRMLCollaborationConnectorNode::WriteXML(ostream & of, int nIndent)
 {
   Superclass::WriteXML(of, nIndent);
-
-  // vtkMRMLWriteXMLBeginMacro(of);
-  // vtkMRMLWriteXMLEnumMacro(angleMeasurementMode, AngleMeasurementMode);
-  // vtkMRMLWriteXMLVectorMacro(orientationRotationAxis, OrientationRotationAxis, double, 3);
-  // vtkMRMLWriteXMLEndMacro();
 }
 
 //----------------------------------------------------------------------------
@@ -78,10 +72,6 @@ void vtkMRMLCollaborationConnectorNode::ReadXMLAttributes(const char** atts)
 {
   Superclass::ReadXMLAttributes(atts);
 
-  // vtkMRMLReadXMLBeginMacro(atts);
-  // vtkMRMLReadXMLEnumMacro(angleMeasurementMode, AngleMeasurementMode);
-  // vtkMRMLReadXMLVectorMacro(orientationRotationAxis, OrientationRotationAxis, double, 3);
-  // vtkMRMLReadXMLEndMacro();
 }
 
 //----------------------------------------------------------------------------
@@ -89,22 +79,12 @@ void vtkMRMLCollaborationConnectorNode::CopyContent(vtkMRMLNode * anode, bool de
 {
   MRMLNodeModifyBlocker blocker(this);
   Superclass::CopyContent(anode, deepCopy);
-
-  // vtkMRMLCopyBeginMacro(anode);
-  // vtkMRMLCopyEnumMacro(AngleMeasurementMode);
-  // vtkMRMLCopyVectorMacro(OrientationRotationAxis, double, 3);
-  // vtkMRMLCopyEndMacro();
 }
 
 //----------------------------------------------------------------------------
 void vtkMRMLCollaborationConnectorNode::PrintSelf(ostream & os, vtkIndent indent)
 {
   Superclass::PrintSelf(os, indent);
-
-  // vtkMRMLPrintBeginMacro(os, indent);
-  // vtkMRMLPrintEnumMacro(AngleMeasurementMode);
-  // vtkMRMLPrintVectorMacro(OrientationRotationAxis, double, 3);
-  // vtkMRMLPrintEndMacro();
 }
 
 //----------------------------------------------------------------------------
@@ -113,6 +93,7 @@ unsigned int vtkMRMLCollaborationConnectorNode::AssignOutGoingNodeToDevice(vtkMR
   return Superclass::AssignOutGoingNodeToDevice(node, device);
 }
 
+//----------------------------------------------------------------------------
 vtkMRMLNode* vtkMRMLCollaborationConnectorNode::CreateNewMRMLNodeForDevice(igtlioDevice * device)
 {
   vtkMRMLScene* scene = this->GetScene();
@@ -153,6 +134,7 @@ vtkMRMLNode* vtkMRMLCollaborationConnectorNode::CreateNewMRMLNodeForDevice(igtli
   return Superclass::CreateNewMRMLNodeForDevice(device);
 }
 
+//----------------------------------------------------------------------------
 void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkObject * caller, unsigned long event, igtlioDevice * modifiedDevice)
 {
   vtkMRMLNode* modifiedNode = this->GetMRMLNodeForDevice(modifiedDevice);
@@ -285,7 +267,7 @@ void vtkMRMLCollaborationConnectorNode::ProcessIncomingDeviceModifiedEvent(vtkOb
   Superclass::ProcessIncomingDeviceModifiedEvent(caller, event, modifiedDevice);
 }
 
-
+//----------------------------------------------------------------------------
 void vtkMRMLCollaborationConnectorNode::orderTransforms(vtkXMLDataElement * res)
 {
   // read attributes
@@ -328,6 +310,7 @@ void vtkMRMLCollaborationConnectorNode::orderTransforms(vtkXMLDataElement * res)
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement * res)
 {
   // read attributes
@@ -584,6 +567,7 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement * res)
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkMRMLCollaborationConnectorNode::addDisplayNode(vtkXMLDataElement * res)
 {
   std::vector<const char*> atts_v;

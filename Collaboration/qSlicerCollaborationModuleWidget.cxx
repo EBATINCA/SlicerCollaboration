@@ -164,7 +164,6 @@ void qSlicerCollaborationModuleWidget::setCollaborationNode(vtkMRMLNode* node)
   {
     // Get the connector node associated to the collaboration node
     vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
-    //connectorNodeID));
 
     if (connectorNode)
     {

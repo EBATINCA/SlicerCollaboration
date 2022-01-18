@@ -54,22 +54,12 @@ vtkMRMLCollaborationNode::~vtkMRMLCollaborationNode() = default;
 void vtkMRMLCollaborationNode::WriteXML(ostream& of, int nIndent)
 {
   Superclass::WriteXML(of,nIndent);
-
-  // vtkMRMLWriteXMLBeginMacro(of);
-  // vtkMRMLWriteXMLEnumMacro(angleMeasurementMode, AngleMeasurementMode);
-  // vtkMRMLWriteXMLVectorMacro(orientationRotationAxis, OrientationRotationAxis, double, 3);
-  // vtkMRMLWriteXMLEndMacro();
 }
 
 //----------------------------------------------------------------------------
 void vtkMRMLCollaborationNode::ReadXMLAttributes(const char** atts)
 {
   Superclass::ReadXMLAttributes(atts);
-
-  // vtkMRMLReadXMLBeginMacro(atts);
-  // vtkMRMLReadXMLEnumMacro(angleMeasurementMode, AngleMeasurementMode);
-  // vtkMRMLReadXMLVectorMacro(orientationRotationAxis, OrientationRotationAxis, double, 3);
-  // vtkMRMLReadXMLEndMacro();
 }
 
 //----------------------------------------------------------------------------
@@ -77,22 +67,12 @@ void vtkMRMLCollaborationNode::CopyContent(vtkMRMLNode* anode, bool deepCopy/*=t
 {
   MRMLNodeModifyBlocker blocker(this);
   Superclass::CopyContent(anode, deepCopy);
-
-  // vtkMRMLCopyBeginMacro(anode);
-  // vtkMRMLCopyEnumMacro(AngleMeasurementMode);
-  // vtkMRMLCopyVectorMacro(OrientationRotationAxis, double, 3);
-  // vtkMRMLCopyEndMacro();
 }
 
 //----------------------------------------------------------------------------
 void vtkMRMLCollaborationNode::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os,indent);
-
-  // vtkMRMLPrintBeginMacro(os, indent);
-  // vtkMRMLPrintEnumMacro(AngleMeasurementMode);
-  // vtkMRMLPrintVectorMacro(OrientationRotationAxis, double, 3);
-  // vtkMRMLPrintEndMacro();
 }
 
 //---------------------------------------------------------------------------
@@ -146,7 +126,6 @@ vtkStringArray* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodeIDs()
 //---------------------------------------------------------------------------
 vtkCollection* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodes()
 {
-	//return vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetNodeReference(this->GetCollaborationSynchronizedNodeReferenceRole()));
 	vtkCollection* nodes = vtkCollection::New();
 	int numberOfNodeReferences = this->GetNumberOfNodeReferences(this->GetCollaborationSynchronizedNodeReferenceRole());
 	for (int n = 0; n < numberOfNodeReferences; ++n)
@@ -168,6 +147,7 @@ const char* vtkMRMLCollaborationNode::GetCollaborationSynchronizedNodeReferenceM
 	return vtkMRMLCollaborationNode::CollaborationSynchronizedNodesReferenceMRMLAttributeName;
 }
 
+//----------------------------------------------------------------------------
 void vtkMRMLCollaborationNode::RemoveCollaborationSynchronizedNodeID(const char* CollaborationSynchronizedNodeID)
 {
 	int numberOfNodeReferences = this->GetNumberOfNodeReferences(this->GetCollaborationSynchronizedNodeReferenceRole());

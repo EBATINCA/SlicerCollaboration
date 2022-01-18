@@ -22,7 +22,6 @@
 // Collaboration Logic includes
 #include "vtkSlicerCollaborationLogic.h"
 
-
 // MRML includes
 #include <vtkMRMLScene.h>
 #include "vtkMRMLModelNode.h"
@@ -85,7 +84,6 @@ void vtkSlicerCollaborationLogic::SetMRMLSceneInternal(vtkMRMLScene* newScene)
 //-----------------------------------------------------------------------------
 void vtkSlicerCollaborationLogic::RegisterNodes()
 {
-  //assert(this->GetMRMLScene() != 0);
   vtkMRMLScene* scene = this->GetMRMLScene();
   if (!scene)
   {
@@ -199,6 +197,7 @@ void vtkSlicerCollaborationLogic
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkSlicerCollaborationLogic::orderTransforms(vtkXMLDataElement* res)
 {
   // read attributes
@@ -243,7 +242,6 @@ void vtkSlicerCollaborationLogic::orderTransforms(vtkXMLDataElement* res)
   }
 }
 
-
 //---------------------------------------------------------------------------
 void vtkSlicerCollaborationLogic
 ::OnMRMLSceneNodeRemoved(vtkMRMLNode* node)
@@ -266,6 +264,7 @@ void vtkSlicerCollaborationLogic
   }
 }
 
+//----------------------------------------------------------------------------
 void vtkSlicerCollaborationLogic::loadAvatars()
 {
   // get directory
@@ -296,5 +295,4 @@ void vtkSlicerCollaborationLogic::loadAvatars()
   handPointLModelNode->SetAndObserveTransformNodeID(transformHandLNode->GetID());
   vtkMRMLLinearTransformNode* transformHandRNode = vtkMRMLLinearTransformNode::SafeDownCast(this->GetMRMLScene()->GetFirstNodeByName("VirtualReality.RightController"));
   handPointRModelNode->SetAndObserveTransformNodeID(transformHandRNode->GetID());
-
 }

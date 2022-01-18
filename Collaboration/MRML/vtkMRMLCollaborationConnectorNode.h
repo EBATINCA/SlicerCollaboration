@@ -31,8 +31,6 @@
 // Collaboration includes
 #include "vtkSlicerCollaborationModuleMRMLExport.h"
 
-/// \brief TODO
-/// TODO
 class VTK_SLICER_COLLABORATION_MODULE_MRML_EXPORT vtkMRMLCollaborationConnectorNode : public vtkMRMLIGTLConnectorNode
 {
 public:
