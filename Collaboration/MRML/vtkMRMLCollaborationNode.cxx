@@ -185,4 +185,3 @@ void vtkMRMLCollaborationNode::RemoveCollaborationSynchronizedNodeID(const char*
 		this->RemoveNthNodeReferenceID(this->GetCollaborationSynchronizedNodeReferenceRole(), removeNodeIndex);
 	}
 }
-
