@@ -71,7 +71,6 @@ void vtkMRMLCollaborationConnectorNode::WriteXML(ostream & of, int nIndent)
 void vtkMRMLCollaborationConnectorNode::ReadXMLAttributes(const char** atts)
 {
   Superclass::ReadXMLAttributes(atts);
-
 }
 
 //----------------------------------------------------------------------------
@@ -345,7 +344,8 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement * res)
     std::string token = vectControlPoints[controlPointIndex];
     // remove brackets
     std::string brackets = "[]";
-    for (char c : brackets) {
+    for (char c : brackets)
+    {
       token.erase(std::remove(token.begin(), token.end(), c), token.end());
     }
     // get every coordinate
@@ -533,7 +533,8 @@ void vtkMRMLCollaborationConnectorNode::addMarkupsNode(vtkXMLDataElement * res)
     std::string ROIRadiusStr = res->GetAttribute("ROIRadius");
     // remove brackets
     std::string brackets = "[]";
-    for (char c : brackets) {
+    for (char c : brackets)
+    {
       ROIRadiusStr.erase(std::remove(ROIRadiusStr.begin(), ROIRadiusStr.end(), c), ROIRadiusStr.end());
     }
     // get every coordinate
