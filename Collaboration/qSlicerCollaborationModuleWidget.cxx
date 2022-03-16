@@ -111,10 +111,10 @@ void qSlicerCollaborationModuleWidget::setup()
   connect(d->connectVRButton, SIGNAL(clicked()), this, SLOT(onConnectVRButtonClicked()));
   connect(d->LoadAvatarsButton, SIGNAL(clicked()), this, SLOT(onLoadAvatarsButtonClicked()));
   // Update connector node values when parameter values are modified in the GUI
-  connect(d->serverModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNode()));
-  connect(d->clientModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNode()));
-  connect(d->portLineEdit, SIGNAL(editingFinished()), this, SLOT(updateConnectorNode()));
-  connect(d->hostNameLineEdit, SIGNAL(editingFinished()), this, SLOT(updateConnectorNode()));
+  connect(d->serverModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNodeFromGUI()));
+  connect(d->clientModeRadioButton, SIGNAL(clicked()), this, SLOT(updateConnectorNodeFromGUI()));
+  connect(d->portLineEdit, SIGNAL(editingFinished()), this, SLOT(updateConnectorNodeFromGUI()));
+  connect(d->hostNameLineEdit, SIGNAL(editingFinished()), this, SLOT(onHostNameChanged()));
   // Synchronize nodes
     // Transform nodes connection
   connect(d->SynchronizeToolButton, SIGNAL(clicked()), SLOT(synchronizeSelectedNodes()));
@@ -163,8 +163,7 @@ void qSlicerCollaborationModuleWidget::setCollaborationNode(vtkMRMLNode* node)
   if (collabNode)
   {
     // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
-
+    vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
     if (connectorNode)
     {
       // if the connector node is new, get the current parameter values
@@ -208,7 +207,7 @@ void qSlicerCollaborationModuleWidget::updateWidgetFromMRML()
   if (collabNode)
   {
     // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+    vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
 
     if (connectorNode && this->mrmlScene())
     {
@@ -249,7 +248,7 @@ void qSlicerCollaborationModuleWidget::onConnectButtonClicked()
   if (collabNode)
   {
     // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+    vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
 
     if (connectorNode)
     {
@@ -291,43 +290,68 @@ void qSlicerCollaborationModuleWidget::onConnectButtonClicked()
 }
 
 //------------------------------------------------------------------------------
-void qSlicerCollaborationModuleWidget::updateConnectorNode()
+void qSlicerCollaborationModuleWidget::updateConnectorNodeFromGUI()
 {
   Q_D(qSlicerCollaborationModuleWidget);
 
   // Get the selected collaboration node
   vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
-
-  if (collabNode)
+  if (!collabNode)
   {
-    // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
-
-    if (connectorNode)
-    {
-      connectorNode->DisableModifiedEventOn();
-
-      // Update connector properties
-      if (d->serverModeRadioButton->isChecked())
-      {
-        connectorNode->SetType(1);
-        d->hostNameLineEdit->setText("NA");
-        d->hostNameLineEdit->setDisabled(true);
-        d->portLineEdit->setEnabled(true);
-      }
-      else
-      {
-        connectorNode->SetType(2);
-        d->hostNameLineEdit->setText("localhost");
-        d->hostNameLineEdit->setEnabled(true);
-        d->portLineEdit->setEnabled(true);
-        connectorNode->SetServerHostname(d->hostNameLineEdit->text().toStdString());
-      }
-      connectorNode->SetServerPort(d->portLineEdit->text().toInt());
-      connectorNode->DisableModifiedEventOff();
-      connectorNode->InvokePendingModifiedEvent();
-    }
+    return;
   }
+
+  // Get the connector node associated to the collaboration node
+  vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
+  if (!connectorNode)
+  {
+    qCritical() << Q_FUNC_INFO << ": Failed to find connector node for collaboration node " << collabNode->GetName();
+    return;
+  }
+
+  int disabledModify = connectorNode->StartModify();
+
+  // Update connector properties
+  if (d->serverModeRadioButton->isChecked())
+  {
+    connectorNode->SetType(1);
+    d->hostNameLineEdit->setText("NA");
+    d->hostNameLineEdit->setDisabled(true);
+    d->portLineEdit->setEnabled(true);
+  }
+  else
+  {
+    connectorNode->SetType(2);
+    d->hostNameLineEdit->setText(connectorNode->GetServerHostname());
+    d->hostNameLineEdit->setEnabled(true);
+    d->portLineEdit->setEnabled(true);
+  }
+  connectorNode->SetServerPort(d->portLineEdit->text().toInt());
+
+  connectorNode->EndModify(disabledModify);
+}
+
+//------------------------------------------------------------------------------
+void qSlicerCollaborationModuleWidget::onHostNameChanged()
+{
+  Q_D(qSlicerCollaborationModuleWidget);
+
+  // Get the selected collaboration node
+  vtkMRMLCollaborationNode* collabNode = vtkMRMLCollaborationNode::SafeDownCast(d->MRMLNodeComboBox->currentNode());
+  if (!collabNode)
+  {
+    return;
+  }
+
+  // Get the connector node associated to the collaboration node
+  vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
+  if (!connectorNode)
+  {
+    qCritical() << Q_FUNC_INFO << ": Failed to find connector node for collaboration node " << collabNode->GetName();
+    return;
+  }
+
+  connectorNode->SetServerHostname(d->hostNameLineEdit->text().toStdString());
 }
 
 //-----------------------------------------------------------------------------
@@ -339,7 +363,7 @@ void qSlicerCollaborationModuleWidget::synchronizeSelectedNodes()
   if (collabNode)
   {
     // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+    vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
     if (connectorNode)
     {
       //Get the selected nodes to synchronize
@@ -605,7 +629,7 @@ void qSlicerCollaborationModuleWidget::unsynchronizeSelectedNodes()
   if (collabNode)
   {
     // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+    vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
     if (connectorNode)
     {
       // Get the selected nodes to unsynchronize
@@ -753,7 +777,7 @@ void qSlicerCollaborationModuleWidget::sendNodesForSynchronization()
   if (collabNode)
   {
     // Get the connector node associated to the collaboration node
-    vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+    vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
 
     if (connectorNode)
     {
@@ -997,7 +1021,7 @@ void qSlicerCollaborationModuleWidget::updateTransformNodeText(vtkMRMLNode* node
     if (collabNode)
     {
       // Get the connector node associated to the collaboration node
-      vtkMRMLCollaborationConnectorNode* connectorNode = vtkMRMLCollaborationConnectorNode::SafeDownCast(this->mrmlScene()->GetNodeByID(collabNode->GetCollaborationConnectorNodeID()));
+      vtkMRMLCollaborationConnectorNode* connectorNode = collabNode->GetCollaborationConnectorNode();
       if (connectorNode)
       {
         // get transformed nodes

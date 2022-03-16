@@ -88,7 +88,7 @@ const char* vtkMRMLCollaborationNode::GetCollaborationConnectorNodeID()
 }
 
 //---------------------------------------------------------------------------
-vtkMRMLCollaborationConnectorNode *vtkMRMLCollaborationNode::GetCollaborationConnectorNode()
+vtkMRMLCollaborationConnectorNode* vtkMRMLCollaborationNode::GetCollaborationConnectorNode()
 {
 	return vtkMRMLCollaborationConnectorNode::SafeDownCast(this->GetNodeReference(this->GetCollaborationConnectorNodeReferenceRole()));
 }
